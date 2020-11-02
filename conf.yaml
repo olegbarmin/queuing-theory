@@ -1,7 +1,7 @@
 QueuingModel:
   InputDistribution: # Erlang Distribution
     shape: 2 # Distribution shape - integer
-    scale: 10 # Distribution rate - average interval between jobs arrival (millis)
+    scale: 100 # Distribution rate - average interval between jobs arrival (millis)
 
   ProcessTimeDistribution: # Exponential Distribution
     scale: 5 # average job processing time (millis)

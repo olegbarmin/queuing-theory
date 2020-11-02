@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 from src.configuration import ConfigReader
 from src.jobs import JobGenerator, AtomicInteger
+from src.model import QueuingSystem
 
 if __name__ == '__main__':
     conf_path = sys.argv[1]
@@ -34,3 +35,6 @@ if __name__ == '__main__':
     job_generator = JobGenerator(lambda: id_gen.increment(), lambda: int(random() * 10))
     for i in range(10):
         print(job_generator.next())
+
+    system = QueuingSystem(input_dist, job_generator, config.simulation_duration)
+    system.start()
