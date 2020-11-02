@@ -28,12 +28,14 @@ class ErlangDistribution(Distribution):
         self.shape = shape  # alpha/m order of Distribution
         self.scale = float(scale)  # beta
 
-    def next_random(self) -> float:
         m = self.shape
         b = self.scale
 
+        self.coefficient = (-b / m)  # is used each time to generate random number
+
+    def next_random(self) -> float:
         prod = self._production()
-        return (-b / m) * math.log(prod)
+        return self.coefficient * math.log(prod)
 
     def _production(self):
         m = self.shape
