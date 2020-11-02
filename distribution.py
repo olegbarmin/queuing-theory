@@ -44,12 +44,10 @@ class ErlangDistribution(Distribution):
 
 class ExponentialDistribution(Distribution):
 
-    def __init__(self, rate) -> None:
+    def __init__(self, scale) -> None:
         super().__init__()
-        self._rate = rate  # lambda
+        self._scale = scale
 
     def next_random(self) -> float:
         r = random.random()
-        numerator = - math.log(r)
-        denominator = self._rate
-        return numerator / denominator
+        return - self._scale * math.log(r)
