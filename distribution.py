@@ -1,31 +1,53 @@
+import functools
 import math
+import random
+
+
+def production(function, stop: int, start: int = 1) -> float:
+    """
+    Calculates product of sequence build using given 'function' from 'start'
+    to 'stop' inclusively.
+    """
+    values = [function(x) for x in range(start, stop + 1)]
+    result = functools.reduce(lambda a, b: a * b, values)
+    return result
 
 
 class Distribution:
 
-    def calc(self, x):
-        pass
+    def next_random(self) -> float:
+        raise Exception("Method calc is not implemented for {} distribution".format(self.__class__.__name__))
 
 
 class ErlangDistribution(Distribution):
 
-    def __init__(self, shape, rate) -> None:
+    def __init__(self, shape, scale) -> None:
         super().__init__()
-        self.shape = shape  # k
-        self.rate = rate  # lambda
+        if not isinstance(shape, int):
+            raise Exception("Shape should be an integer for the Erlang Distribution")
+        self.shape = shape  # alpha/m order of Distribution
+        self.scale = float(scale)  # beta
 
-    def calc(self, x):
-        k = self.shape
-        rate = self.rate
+    def next_random(self) -> float:
+        m = self.shape
+        b = self.scale
 
-        numerator = rate ** k * x ** (k - 1) * math.exp(-(rate * x))
-        denominator = math.factorial((k - 1))
-        return numerator / denominator
+        prod = self._production()
+        return (-b / m) * math.log(prod)
+
+    def _production(self):
+        m = self.shape
+        return production(lambda x: random.random(), m)
 
 
-class PoissonDistribution(Distribution):
+class ExponentialDistribution(Distribution):
 
     def __init__(self, rate) -> None:
         super().__init__()
         self.rate = rate  # lambda
 
+    def next_random(self) -> float:
+        r = random.random()
+        numerator = - math.log(r)
+        denominator = self.rate
+        return numerator / denominator
