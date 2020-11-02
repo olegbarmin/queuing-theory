@@ -15,7 +15,6 @@ class QueuingSystem:
         current_time = _current_millis()
         elapsed = current_time - start_time
         while self._duration > elapsed:
-
             interval = int(self._interval_generator.next_random())
             _sleep(interval)
 
