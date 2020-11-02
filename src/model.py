@@ -11,9 +11,18 @@ class QueuingSystem:
         self._duration = simulation_duration
 
     def start(self):
-        interval = int(self._interval_generator.next_random())
-        print(interval)
-        _sleep(interval)
+        start_time = _current_millis()
+        current_time = _current_millis()
+        elapsed = current_time - start_time
+        while self._duration > elapsed:
+
+            interval = int(self._interval_generator.next_random())
+            _sleep(interval)
+
+            current_time = _current_millis()
+            elapsed = current_time - start_time
+
+        print("Simulation took {} ms".format(elapsed))
 
 
 def _sleep(millis: int):
