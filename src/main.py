@@ -28,6 +28,7 @@ if __name__ == '__main__':
 
     print(config.servers_number)
     print(config.queue_size)
+    print(config.simulation_duration)
 
     id_gen = AtomicInteger()
     job_generator = JobGenerator(lambda: id_gen.increment(), lambda: int(random() * 10))

@@ -12,6 +12,7 @@ RATE_KEY = "rate"
 
 SERVERS_NUMBER_KEY = "serversNumber"
 QUEUE_SIZE_KEY = "queueSize"
+SIMULATION_DURATION_KEY = "simulationDuration"
 
 
 class ConfigReader:
@@ -42,6 +43,10 @@ class ConfigReader:
     @property
     def queue_size(self) -> int:
         return self._get_config()[QUEUE_SIZE_KEY]
+
+    @property
+    def simulation_duration(self) -> int:
+        return int(self._get_config()[SIMULATION_DURATION_KEY])
 
     def _get_config(self) -> dict:
         if self._config is None:
