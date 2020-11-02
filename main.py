@@ -1,6 +1,9 @@
+from random import random
+
 import matplotlib.pyplot as plt
 
 from configuration import ConfigReader
+from jobs import JobGenerator, AtomicInteger
 
 if __name__ == '__main__':
     config = ConfigReader("conf.yaml")
@@ -24,4 +27,7 @@ if __name__ == '__main__':
     print(config.servers_number)
     print(config.queue_size)
 
-
+    id_gen = AtomicInteger()
+    job_generator = JobGenerator(lambda: id_gen.increment(), lambda: int(random() * 10))
+    for i in range(10):
+        print(job_generator.next())
