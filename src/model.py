@@ -1,7 +1,6 @@
-import time
-
 from src.distribution import Distribution
-from src.jobs import JobGenerator
+from src.job.jobs import JobGenerator
+from src.systemtime import sleep, Stopwatch
 
 
 class QueuingSystem:
@@ -13,27 +12,15 @@ class QueuingSystem:
         self._duration = simulation_duration
 
     def start(self):
-        start_time = _current_millis()
-        current_time = _current_millis()
-        elapsed = current_time - start_time
-        while self._duration > elapsed:
+        stopwatch = Stopwatch()
+        while not stopwatch.is_elapsed(self._duration):
             interval = int(self._interval_generator.next_random())
-            _sleep(interval)
+            sleep(interval)
 
             job = self._job_generator.next()
-            print(job)
+            self._process_job(job)
 
-            current_time = _current_millis()
-            elapsed = current_time - start_time
+        print("Simulation took {} ms".format(stopwatch.elapsed()))
 
-        print("Simulation took {} ms".format(elapsed))
-
-
-def _sleep(millis: int):
-    if not isinstance(millis, int):
-        raise Exception("Int value expected as sleep argument. Actual: {} ({})".format(millis, type(millis)))
-    time.sleep(millis / 1000)
-
-
-def _current_millis() -> int:
-    return int(round(time.time() * 1000))
+    def _process_job(self, job):
+        print(job)

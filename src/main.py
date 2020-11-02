@@ -4,7 +4,7 @@ from random import random
 import matplotlib.pyplot as plt
 
 from src.configuration import ConfigReader
-from src.jobs import JobGenerator, AtomicInteger
+from src.job.jobs import JobGenerator, AtomicInteger
 from src.model import QueuingSystem
 
 if __name__ == '__main__':
