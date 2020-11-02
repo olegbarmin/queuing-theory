@@ -1,6 +1,6 @@
 import yaml
 
-from distribution import Distribution, ErlangDistribution, ExponentialDistribution
+from src.distribution import Distribution, ErlangDistribution, ExponentialDistribution
 
 CONFIG_ROOT_KEY = "QueuingModel"
 INPUT_DISTRIBUTION_KEY = "InputDistribution"
@@ -45,10 +45,9 @@ class ConfigReader:
 
     def _get_config(self) -> dict:
         if self._config is None:
-            self._config = ConfigReader._load_config()
+            self._config = self._load_config()
         return self._config[CONFIG_ROOT_KEY]
 
-    @staticmethod
-    def _load_config():
-        with open("conf.yaml", 'r') as stream:
+    def _load_config(self):
+        with open(self.config_path, 'r') as stream:
             return yaml.safe_load(stream)

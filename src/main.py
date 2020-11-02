@@ -1,12 +1,14 @@
+import sys
 from random import random
 
 import matplotlib.pyplot as plt
 
-from configuration import ConfigReader
-from jobs import JobGenerator, AtomicInteger
+from src.configuration import ConfigReader
+from src.jobs import JobGenerator, AtomicInteger
 
 if __name__ == '__main__':
-    config = ConfigReader("conf.yaml")
+    conf_path = sys.argv[1]
+    config = ConfigReader(conf_path)
 
     input_dist = config.input_distribution
     x = [input_dist.next_random() for _ in range(0, 100000)]
