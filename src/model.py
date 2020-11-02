@@ -1,11 +1,13 @@
 import time
 
 from src.distribution import Distribution
+from src.jobs import JobGenerator
 
 
 class QueuingSystem:
 
-    def __init__(self, input_interval_generator: Distribution, job_generator, simulation_duration) -> None:
+    def __init__(self, input_interval_generator: Distribution, job_generator: JobGenerator,
+                 simulation_duration) -> None:
         self._job_generator = job_generator
         self._interval_generator = input_interval_generator
         self._duration = simulation_duration
@@ -17,6 +19,9 @@ class QueuingSystem:
         while self._duration > elapsed:
             interval = int(self._interval_generator.next_random())
             _sleep(interval)
+
+            job = self._job_generator.next()
+            print(job)
 
             current_time = _current_millis()
             elapsed = current_time - start_time
