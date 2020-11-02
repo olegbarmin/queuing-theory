@@ -1,0 +1,18 @@
+QueuingModel:
+  InputDistribution: # Erlang Distribution
+    shape: 2 # Distribution shape - integer
+    scale: 2 # Distribution rate - average number of income jobs per hour
+
+  ProcessTimeDistribution: # Exponential Distribution
+    scale: 5 # Average number of minutes to process each job
+
+  serversNumber: 2
+  queueSize: 5
+
+
+
+
+
+
+
+
