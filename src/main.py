@@ -27,6 +27,12 @@ if __name__ == '__main__':
     stats = SimulationStatistics()
     for server in servers:
         stats.add_server_processing_metrics(server.stats)
+    stats.add_wait_time_metrics(queue.stats)
 
     table = stats.get_server_processing_stats()
+    print("------- Job Processing Time Stats -------")
+    print(table)
+
+    table = stats.get_wait_time_stats()
+    print("------- Job Wait Time Stats -------")
     print(table)
