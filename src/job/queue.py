@@ -5,7 +5,7 @@ from typing import Tuple
 from src.job.jobs import Job
 
 
-class JobsQueue:
+class JobStorage:
 
     def __init__(self, queue_size) -> None:
         self._queue = Queue(queue_size)

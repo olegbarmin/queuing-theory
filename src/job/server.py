@@ -2,13 +2,13 @@ import threading
 
 from src.distribution import Distribution
 from src.job.jobs import Job
-from src.job.queue import JobsQueue
+from src.job.queue import JobStorage
 from src.systemtime import sleep, Stopwatch
 
 
 class JobProcessingServer:
 
-    def __init__(self, processing_distribution: Distribution, queue: JobsQueue, id_: int = 1) -> None:
+    def __init__(self, processing_distribution: Distribution, queue: JobStorage, id_: int = 1) -> None:
         self._distribution = processing_distribution
         self._queue = queue
         self._stop = False

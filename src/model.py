@@ -3,7 +3,7 @@ from typing import List
 
 from src.distribution import Distribution
 from src.job.jobs import JobGenerator
-from src.job.queue import JobsQueue
+from src.job.queue import JobStorage
 from src.job.server import JobProcessingServer
 from src.systemtime import sleep, Stopwatch
 
@@ -11,7 +11,7 @@ from src.systemtime import sleep, Stopwatch
 class QueuingSystem:
 
     def __init__(self, input_interval_generator: Distribution, job_generator: JobGenerator,
-                 simulation_duration, servers: List[JobProcessingServer], queue: JobsQueue) -> None:
+                 simulation_duration, servers: List[JobProcessingServer], queue: JobStorage) -> None:
         self._job_generator = job_generator
         self._interval_generator = input_interval_generator
         self._duration = simulation_duration
