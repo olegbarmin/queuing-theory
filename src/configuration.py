@@ -26,14 +26,12 @@ class ConfigReader:
         dist_config = self._get_config()[INPUT_DISTRIBUTION_KEY]
         shape = int(dist_config[SHAPE_KEY])
         scale = float(dist_config[SCALE_KEY])
-        print("ErlangDistribution({},{})".format(shape, scale))
         return ErlangDistribution(shape, scale)
 
     @property
     def process_time_distribution(self) -> Distribution:
         dist_config = self._get_config()[PROCESS_TIME_DISTRIBUTION]
         scale = float(dist_config[SCALE_KEY])
-        print("ExponentialDistribution({})".format(scale))
         return ExponentialDistribution(scale)
 
     @property
