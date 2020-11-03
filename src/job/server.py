@@ -8,11 +8,11 @@ from src.systemtime import sleep, Stopwatch
 
 class JobProcessingServer:
 
-    def __init__(self, processing_distribution: Distribution, queue: JobsQueue, id: int = 1) -> None:
+    def __init__(self, processing_distribution: Distribution, queue: JobsQueue, id_: int = 1) -> None:
         self._distribution = processing_distribution
         self._queue = queue
         self._stop = False
-        self._id = id
+        self._id = id_
 
     def stop(self):
         self._stop = True
@@ -35,7 +35,7 @@ class JobProcessingServer:
         stopwatch = Stopwatch()
         while not stopwatch.is_elapsed(duration):
             sleep(1)
-        self._log("Job '{}' was processed for {}".format(job, stopwatch.elapsed(), duration))
+        self._log("Job '{}' was processed for {}".format(job, stopwatch.elapsed()))
 
     def _log(self, msg):
         print("Server {}: {}".format(self._id, msg))
