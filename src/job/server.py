@@ -34,7 +34,7 @@ class JobProcessingServer:
         duration = int(self._distribution.next_random())
         stopwatch = Stopwatch()
         while not stopwatch.is_elapsed(duration):
-            sleep(5)
+            sleep(1)
         self._log("Job '{}' was processed for {}".format(job, stopwatch.elapsed(), duration))
 
     def _log(self, msg):
