@@ -38,7 +38,7 @@ class QueuingSystem:
 
         self._stop_servers()
         elapsed = stopwatch.elapsed()
-        sleep(500)  # since the printed lines order is not guaranteed, waiting some time for them to be flashed
+        sleep(1000)  # since the printed lines order is not guaranteed, waiting some time for them to be flashed
         print("System: Simulation took {} ms".format(elapsed))
 
     def _process_job(self, job):

@@ -6,6 +6,7 @@ from src.job.jobs import JobGenerator, AtomicInteger
 from src.job.queue import JobStorage
 from src.job.server import JobProcessingServer
 from src.model import QueuingSystem
+from src.stats import SimulationStatistics
 
 if __name__ == '__main__':
     conf_path = sys.argv[1]
@@ -22,3 +23,10 @@ if __name__ == '__main__':
     system = QueuingSystem(input_dist, job_generator, config.simulation_duration, servers, queue)
 
     system.start()
+
+    stats = SimulationStatistics()
+    for server in servers:
+        stats.add_server_processing_metrics(server.stats)
+
+    table = stats.get_server_processing_stats()
+    print(table)
