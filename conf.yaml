@@ -4,7 +4,7 @@ QueuingModel:
     scale: 100 # Distribution rate - average interval between jobs arrival (millis)
 
   ProcessTimeDistribution: # Exponential Distribution
-    scale: 5 # average job processing time (millis)
+    scale: 200 # average job processing time (millis)
 
   serversNumber: 2
   queueSize: 5
