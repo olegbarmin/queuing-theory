@@ -17,6 +17,7 @@ class WaitTimeMetric:
     def wait_time(self):
         return self._wait_time
 
+
 class JobStorage:
 
     def __init__(self, queue_size) -> None:
