@@ -55,4 +55,7 @@ class ConfigReader:
 
     def _load_config(self):
         with open(self.config_path, 'r') as stream:
-            return yaml.safe_load(stream)
+            config = yaml.safe_load(stream)
+            print("Loaded config:\n--------\n{}".format(yaml.dump(config)))
+            print("--------")
+            return config
