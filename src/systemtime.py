@@ -13,10 +13,10 @@ def current_millis() -> int:
 
 class Stopwatch:
     def __init__(self) -> None:
-        self.start = current_millis()
+        self._start = current_millis()
 
     def elapsed(self) -> int:
-        return current_millis() - self.start
+        return current_millis() - self._start
 
     def is_elapsed(self, duration) -> bool:
         elapsed = self.elapsed()
