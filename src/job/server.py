@@ -43,9 +43,6 @@ class JobProcessingServer:
     @job.setter
     def job(self, value: Job):
         with self._lock:
-            if self._job is not None:
-                raise Exception("Job {} is already assigned to {} server. It cannot be changed to {} job"
-                                .format(self._job.id, self.id, value.id))
             self._job = value
 
     def run(self):
@@ -81,9 +78,17 @@ class JobProcessingServer:
         duration = int(self._distribution.next_random())
         self._log("Processing job {}...".format(job.id))
         stopwatch = Stopwatch()
+        finished = True
         while not stopwatch.is_elapsed(duration):
+            if self._job.id is not job.id:
+                finished = False
+                break
             sleep(1)
-        self._log("Job '{}' was processed for {}".format(job.id, stopwatch.elapsed()))
+        if finished:
+            self._log("Job '{}' was processed for {}".format(job.id, stopwatch.elapsed()))
+        else:
+            self._log("Processing of {} was aborted to start processing of {} with higher priority"
+                      .format(job, self.job))
 
     def _log(self, msg):
         print("Server {}: {}".format(self._id, msg))

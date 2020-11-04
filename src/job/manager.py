@@ -37,19 +37,8 @@ class ServerLoadManager:
 
     def process(self, job: Job):
         with self._lock:
-            if not self._queue.is_empty():
+            if not self._assign_server(job):
                 self._queue_job(job)
-            else:
-                found_idle_server = False
-                for server in list(self._servers_dict.values()):
-                    if server.is_idle():
-                        print("Manager: Processing job {} directly by {} server".format(job.id, server.id))
-                        server.job = job
-                        found_idle_server = True
-                        break
-
-                if not found_idle_server:
-                    self._queue_job(job)
 
     def _queue_job(self, job: Job):
         success = self._queue.add(job)
@@ -58,3 +47,22 @@ class ServerLoadManager:
                   .format(job.id, self._queue.size()))
         else:
             print("Manager: {} was queued (queue size = {})".format(job, self._queue.size()))
+
+    def _assign_server(self, job: Job):
+        found_server = False
+        for server in list(self._servers_dict.values()):
+            if server.is_idle():
+                print("Manager: Processing job {} directly by {} server".format(job.id, server.id))
+                server.job = job
+                found_server = True
+                break
+
+        if not found_server:  # idle server wasn't found, looking for a server which processing lower priority job
+            for server in list(self._servers_dict.values()):
+                if server.job.priority > job.priority:
+                    # print("Manager: Server {} processing lower priority {} hence switching it to {}"
+                    #       .format(server.id, server.job, job))
+                    server.job = job
+                    found_server = True
+
+        return found_server
