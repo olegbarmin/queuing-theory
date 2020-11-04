@@ -16,19 +16,22 @@ class QueuingSystem:
         self._interval_generator = input_interval_generator
         self._duration = simulation_duration
         self._servers = servers
-        self._manager = manager
         self._server_to_thread_dict = None
+        self._manager = manager
+        self._manager_thread = None
 
-    def start(self):
-        server_to_thread_dict = {server.id: threading.Thread(target=server.start) for server in self._servers}
+    def run(self):
+        server_to_thread_dict = {server.id: threading.Thread(target=server.run) for server in self._servers}
         self._server_to_thread_dict = server_to_thread_dict
 
-        self._manager.start()
+        self._manager_thread = threading.Thread(target=self._manager.run)
+        self._manager_thread.start()
+
         for thread in list(server_to_thread_dict.values()):
             thread.start()
         self._start()
 
-    def _start(self, ):
+    def _start(self):
         stopwatch = Stopwatch()
         while not stopwatch.is_elapsed(self._duration):
             interval = int(self._interval_generator.next_random())
@@ -37,12 +40,15 @@ class QueuingSystem:
             job = self._job_generator.next()
             self._manager.process(job)
 
-        self._manager.stop()
-        # todo: add wait for the que processing
-        self._stop_servers()
+        self._stop()
         elapsed = stopwatch.elapsed()
-        sleep(1000)  # since the printed lines order is not guaranteed, waiting some time for them to be flashed
         print("System: Simulation took {} ms".format(elapsed))
+
+    def _stop(self):
+        self._manager.stop()
+        QueuingSystem._wait_for_thread_stop(self._manager_thread)
+        self._stop_servers()
+        sleep(1000)  # since the printed lines order is not guaranteed, waiting some time for them to be flashed
 
     def _stop_servers(self):
         for server in self._servers:
@@ -51,7 +57,11 @@ class QueuingSystem:
 
     def _wait_server_stop(self, server: JobProcessingServer):
         thread = self._server_to_thread_dict[server.id]
-        while thread.is_alive():
-            sleep(1)  # interval between retries whether sever was stopped
+        QueuingSystem._wait_for_thread_stop(thread)
 
         print("System: Server {} finished execution".format(server.id))
+
+    @staticmethod
+    def _wait_for_thread_stop(thread: threading.Thread):
+        while thread.is_alive():
+            sleep(1)

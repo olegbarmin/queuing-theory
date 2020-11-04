@@ -48,7 +48,7 @@ class JobProcessingServer:
                                 .format(self._job.id, self.id, value.id))
             self._job = value
 
-    def start(self):
+    def run(self):
         self._log("Server was started...")
         while self._stop is not True:
             job = self._job

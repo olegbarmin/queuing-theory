@@ -25,7 +25,7 @@ if __name__ == '__main__':
     manager = ServerLoadManager(servers, queue)
 
     system = QueuingSystem(input_dist, job_generator, config.simulation_duration, servers, manager)
-    system.start()
+    system.run()
 
     stats = SimulationStatistics()
     for server in servers:

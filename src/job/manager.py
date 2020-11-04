@@ -15,17 +15,15 @@ class ServerLoadManager:
         self._lock = threading.Lock()
         self._stop = False
 
-    def start(self):
-        thread = threading.Thread(target=self._load_servers)
-        thread.start()
+    def run(self):
+        # runs until stop command received and queue is cleared
+        while self._stop is not True or (self._stop is True and not self._queue.is_empty()):
+            self._try_pick_job_from_queue()
+            sleep(1)
+        print("Manager: Queue is empty, queue clearing thread stopped.")
 
     def stop(self):
         self._stop = True
-
-    def _load_servers(self):
-        while self._stop is not True:
-            self._try_pick_job_from_queue()
-            sleep(1)
 
     def _try_pick_job_from_queue(self):
         for server in list(self._servers_dict.values()):
