@@ -31,7 +31,8 @@ class ServerLoadManager:
                 if server.is_idle():
                     job, exist = self._queue.pop()
                     if exist:
-                        print("Manager: Picking job {} from queue to {} server".format(job.id, server.id))
+                        print("Manager: Picking job {} from queue to {} server (queue size = {})"
+                              .format(job.id, server.id, self._queue.size()))
                         server.job = job
 
     def process(self, job: Job):
@@ -56,4 +57,4 @@ class ServerLoadManager:
             print("Manager: Job {} was dropped since queue is full (queue size = {})"
                   .format(job.id, self._queue.size()))
         else:
-            print("Manager: Job {} was queued (queue size = {})".format(job.id, self._queue.size()))
+            print("Manager: {} was queued (queue size = {})".format(job, self._queue.size()))

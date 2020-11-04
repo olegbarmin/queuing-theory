@@ -18,6 +18,9 @@ class Job:
     def __str__(self) -> str:
         return "Job(id: {}, priority: {})".format(self._id, self._priority)
 
+    def __lt__(self, other):
+        return self._priority < other.priority
+
 
 class AtomicInteger:
 
@@ -42,5 +45,6 @@ class JobGenerator:
         priority = self.priority_func()
         if not isinstance(priority, int):
             raise Exception("Priority should be an integer. Actual: {}".format(priority))
-
-        return Job(id_, priority)
+        job = Job(id_, priority)
+        print("JobGenerator: Generated job - {}".format(job))
+        return job

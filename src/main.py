@@ -17,7 +17,7 @@ if __name__ == '__main__':
     time_dist = config.process_time_distribution
 
     id_gen = AtomicInteger()
-    job_generator = JobGenerator(lambda: id_gen.increment(), lambda: int(random() * 10))
+    job_generator = JobGenerator(lambda: id_gen.increment(), lambda: int(random() * 10) % 3 + 1)
 
     servers = [JobProcessingServer(time_dist, i + 1) for i in range(config.servers_number)]
 

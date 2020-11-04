@@ -1,6 +1,6 @@
 import functools
 import threading
-from queue import Queue
+from queue import PriorityQueue
 from typing import Tuple, List
 
 from src.job.jobs import Job
@@ -21,7 +21,7 @@ class WaitTimeMetric:
 class JobStorage:
 
     def __init__(self, queue_size) -> None:
-        self._queue = Queue(queue_size)
+        self._queue = PriorityQueue(maxsize=queue_size)
         self._lock = threading.Lock()
         self._job_wait_dict = {}  # job ID: Stopwatch
         self._wait_metrics = []
