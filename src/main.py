@@ -3,6 +3,7 @@ from random import random
 
 from src.configuration import ConfigReader
 from src.job.jobs import JobGenerator, AtomicInteger
+from src.job.manager import ServerLoadManager
 from src.job.queue import JobStorage
 from src.job.server import JobProcessingServer
 from src.model import QueuingSystem
@@ -18,10 +19,12 @@ if __name__ == '__main__':
     id_gen = AtomicInteger()
     job_generator = JobGenerator(lambda: id_gen.increment(), lambda: int(random() * 10))
 
-    queue = JobStorage(config.queue_size)
-    servers = [JobProcessingServer(time_dist, queue, i + 1) for i in range(config.servers_number)]
-    system = QueuingSystem(input_dist, job_generator, config.simulation_duration, servers, queue)
+    servers = [JobProcessingServer(time_dist, i + 1) for i in range(config.servers_number)]
 
+    queue = JobStorage(config.queue_size)
+    manager = ServerLoadManager(servers, queue)
+
+    system = QueuingSystem(input_dist, job_generator, config.simulation_duration, servers, manager)
     system.start()
 
     stats = SimulationStatistics()

@@ -38,9 +38,9 @@ class JobGenerator:
         self.id_func = id_generation_func
 
     def next(self) -> Job:
-        id = self.id_func()
+        id_ = self.id_func()
         priority = self.priority_func()
         if not isinstance(priority, int):
             raise Exception("Priority should be an integer. Actual: {}".format(priority))
 
-        return Job(id, priority)
+        return Job(id_, priority)

@@ -34,6 +34,10 @@ class JobStorage:
         with self._lock:
             return self._pop()
 
+    def is_empty(self) -> bool:
+        with self._lock:
+            return self._queue.empty()
+
     @property
     def stats(self) -> List[WaitTimeMetric]:
         return self._wait_metrics
@@ -82,3 +86,6 @@ class JobStorage:
 
     _add_stat = staticmethod(_add_stat)
     _pop_stat = staticmethod(_pop_stat)
+
+    def size(self):
+        return self._queue.qsize()

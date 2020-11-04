@@ -37,11 +37,11 @@ class SimulationStatistics:
         time_per_job = [stat.wait_time for stat in stats]
 
         total_time = sum(time_per_job)
-        job_number = len(time_per_job)
-        avg_time = total_time / job_number
+        queued_jobs_number = len(time_per_job)
+        avg_time = total_time / queued_jobs_number if queued_jobs_number is not 0 else 0
         table = [
             ["Total time", total_time],
             ["Avg. time", avg_time],
-            ["Total processed jobs number", job_number]
+            ["Total processed jobs number", queued_jobs_number]
         ]
         return tabulate(table, numalign="right")

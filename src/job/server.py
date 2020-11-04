@@ -4,7 +4,6 @@ from typing import List
 
 from src.distribution import Distribution
 from src.job.jobs import Job
-from src.job.queue import JobStorage
 from src.systemtime import sleep, Stopwatch
 
 
@@ -21,20 +20,42 @@ class JobProcessTimeMetric:
 
 class JobProcessingServer:
 
-    def __init__(self, processing_distribution: Distribution, queue: JobStorage, id_: int = 1) -> None:
+    def __init__(self, processing_distribution: Distribution, id_) -> None:
         self._distribution = processing_distribution
-        self._queue = queue
         self._stop = False
+        self._job = None
         self._id = id_
         self._job_metrics = []
+        self._lock = threading.Lock()
 
     @property
     def id(self):
         return self._id
 
+    def is_idle(self) -> bool:
+        return self._job is None
+
+    @property
+    def job(self):
+        with self._lock:
+            return self._job
+
+    @job.setter
+    def job(self, value: Job):
+        with self._lock:
+            if self._job is not None:
+                raise Exception("Job {} is already assigned to {} server. It cannot be changed to {} job"
+                                .format(self._job.id, self.id, value.id))
+            self._job = value
+
     def start(self):
-        thread = threading.Thread(target=self._start)
-        thread.start()
+        self._log("Server was started...")
+        while self._stop is not True:
+            job = self._job
+            if job is not None:
+                self._process(job)
+                self._job = None
+        self._log("Server was stopped!")
 
     def stop(self):
         self._stop = True
@@ -42,14 +63,6 @@ class JobProcessingServer:
     @property
     def stats(self) -> List[JobProcessTimeMetric]:
         return self._job_metrics
-
-    def _start(self):
-        self._log("Execution started!")
-        while self._stop is not True:
-            job, has_job = self._queue.pop()
-            if has_job:
-                self._process(job)
-        self._log("Execution finished!")
 
     def _process_stat(func):
         @functools.wraps(func)
@@ -66,11 +79,11 @@ class JobProcessingServer:
     @_process_stat
     def _process(self, job: Job):
         duration = int(self._distribution.next_random())
-        self._log("Processing {} job".format(job))
+        self._log("Processing job {}...".format(job.id))
         stopwatch = Stopwatch()
         while not stopwatch.is_elapsed(duration):
             sleep(1)
-        self._log("Job '{}' was processed for {}".format(job, stopwatch.elapsed()))
+        self._log("Job '{}' was processed for {}".format(job.id, stopwatch.elapsed()))
 
     def _log(self, msg):
         print("Server {}: {}".format(self._id, msg))
