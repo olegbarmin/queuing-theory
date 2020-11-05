@@ -9,6 +9,12 @@ class Listener:
     def job_processing_aborted(self, job):
         pass
 
+    def job_queued(self, job):
+        pass
+
+    def job_pop_from_queue(self, job):
+        pass
+
     def job_dropped_from_queue(self, job):
         pass
 
@@ -36,12 +42,22 @@ class EventBus:
                 listener.job_schedule(job)
 
     def job_processing_aborted(self, job):
-        """
-        Job was dropped from queue or processing bye server
-        """
         with self._lock:
             for listener in self._listeners:
                 listener.job_processing_aborted(job)
+
+    def job_queued(self, job):
+        """
+        Job was added into the queue
+        """
+        with self._lock:
+            for listener in self._listeners:
+                listener.job_queued(job)
+
+    def job_pop_from_queue(self, job):
+        with self._lock:
+            for listener in self._listeners:
+                listener.job_pop_from_queue(job)
 
     def job_dropped_from_queue(self, job):
         with self._lock:

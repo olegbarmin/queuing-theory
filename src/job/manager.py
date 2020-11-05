@@ -28,13 +28,14 @@ class ServerLoadManager:
         self._stop = True
 
     def _try_pick_job_from_queue(self):
-        for server in list(self._servers_dict.values()):
-            with self._lock:
+        with self._lock:
+            for server in list(self._servers_dict.values()):
                 if server.is_idle():
                     job, exist = self._queue.pop()
                     if exist:
                         print("Manager: Picking job {} from queue to {} server (queue size = {})"
-                              .format(job.id, server.id, self._queue.size()))
+                              .format(job, server.id, self._queue.size()))
+                        self._eventbus.job_pop_from_queue(job)
                         server.job = job
 
     def schedule(self, job: Job) -> bool:
@@ -56,8 +57,10 @@ class ServerLoadManager:
             print("Manager: {} was removed from queue since the {} has higher priority (queue size = {})"
                   .format(dropped, job, self._queue.size()))
             self._eventbus.job_dropped_from_queue(dropped)
+            self._eventbus.job_queued(job)
         else:
             print("Manager: {} was queued (queue size = {})".format(job, self._queue.size()))
+            self._eventbus.job_queued(job)
         return success
 
     def _assign_server(self, job: Job):

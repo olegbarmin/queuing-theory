@@ -41,3 +41,14 @@ class QueueSizeMetric:
 
     def average_queue_size(self) -> int:
         return sum(self._sizes) / len(self._sizes) if len(self._sizes) is not 0 else 0
+
+
+class WaitTimeMetric:
+
+    def __init__(self, job, wait_time) -> None:
+        self._job = job
+        self._wait_time = wait_time
+
+    @property
+    def wait_time(self):
+        return self._wait_time
