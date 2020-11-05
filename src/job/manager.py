@@ -78,5 +78,6 @@ class ServerLoadManager:
                     self._eventbus.job_processing_aborted(server.job)
                     server.job = job
                     found_server = True
+                    break
 
         return found_server
