@@ -1,5 +1,7 @@
 from typing import List
 
+from src.systemtime import Stopwatch
+
 
 class JobProcessTimeMetric:
 
@@ -52,3 +54,48 @@ class WaitTimeMetric:
     @property
     def wait_time(self):
         return self._wait_time
+
+
+IDLE = "IDLE"
+BUSY = "BUSY"
+
+
+class SystemBusynessMetric:
+
+    def __init__(self) -> None:
+        self._state_changes = []
+        self._stopwatch = Stopwatch()
+        print("SimulationStatistics: start state stopwatch")
+        self._current_state = IDLE
+
+    def record_idle(self):
+        if self._current_state is BUSY:
+            elapsed = self._stopwatch.elapsed()
+            self._state_changes.append((self._current_state, elapsed))
+            self._current_state = IDLE
+            self._stopwatch = Stopwatch()
+            print("SimulationStatistics: System is IDLE (BUSY for {} ms)".format(elapsed))
+
+    def record_busy(self):
+        if self._current_state is IDLE:
+            elapsed = self._stopwatch.elapsed()
+            self._state_changes.append((self._current_state, elapsed))
+            self._current_state = BUSY
+            self._stopwatch = Stopwatch()
+            print("SimulationStatistics: System is BUSY (IDLE for {} ms)".format(elapsed))
+
+    def stop_record(self):
+        elapsed = self._stopwatch.elapsed()
+        state = self._current_state
+        print("SimulationStatistics: Final state is {} for {}".format(state, elapsed))
+        self._state_changes.append((state, elapsed))
+        self._current_state = None
+        self._stopwatch = None
+
+    def idle_time(self):
+        idle_states = filter(lambda state_change: state_change[0] is IDLE, self._state_changes)
+        return sum(map(lambda x: x[1], idle_states))
+
+    def busy_time(self):
+        busy_states = filter(lambda state_change: state_change[0] is BUSY, self._state_changes)
+        return sum(map(lambda x: x[1], busy_states))

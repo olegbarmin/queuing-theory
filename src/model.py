@@ -5,13 +5,15 @@ from src.distribution import Distribution
 from src.job.jobs import JobGenerator
 from src.job.manager import ServerLoadManager
 from src.job.server import JobProcessingServer
+from src.stats.eventbus import EventBus
 from src.systemtime import sleep, Stopwatch
 
 
 class QueuingSystem:
 
     def __init__(self, input_interval_generator: Distribution, job_generator: JobGenerator,
-                 simulation_duration, servers: List[JobProcessingServer], manager: ServerLoadManager) -> None:
+                 simulation_duration, servers: List[JobProcessingServer], manager: ServerLoadManager,
+                 eventbus: EventBus) -> None:
         self._job_generator = job_generator
         self._interval_generator = input_interval_generator
         self._duration = simulation_duration
@@ -19,6 +21,7 @@ class QueuingSystem:
         self._server_to_thread_dict = None
         self._manager = manager
         self._manager_thread = None
+        self._eventbus = eventbus
 
     def run(self):
         server_to_thread_dict = {server.id: threading.Thread(target=server.run) for server in self._servers}
@@ -41,6 +44,8 @@ class QueuingSystem:
             self._manager.schedule(job)
 
         self._stop()
+        self._eventbus.all_jobs_processed()
+        sleep(1000)  # since the printed lines order is not guaranteed, waiting some time for them to be flashed
         elapsed = stopwatch.elapsed()
         print("System: Simulation took {} ms".format(elapsed))
 
@@ -48,7 +53,6 @@ class QueuingSystem:
         self._manager.stop()
         QueuingSystem._wait_for_thread_stop(self._manager_thread)
         self._stop_servers()
-        sleep(1000)  # since the printed lines order is not guaranteed, waiting some time for them to be flashed
 
     def _stop_servers(self):
         for server in self._servers:

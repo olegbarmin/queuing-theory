@@ -24,6 +24,9 @@ class Listener:
     def job_process_start(self, job):
         pass
 
+    def all_jobs_processed(self):
+        pass
+
 
 class EventBus:
     def __init__(self) -> None:
@@ -79,3 +82,9 @@ class EventBus:
         with self._lock:
             for listener in self._listeners:
                 listener.job_was_processed(job)
+
+    def all_jobs_processed(self):
+        """
+        All generated jobs were processed, and there wouldn't be more
+        """
+        pass

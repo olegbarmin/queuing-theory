@@ -28,7 +28,7 @@ if __name__ == '__main__':
     stats = SimulationStatistics(queue, servers)
     eventbus.add(stats)
 
-    system = QueuingSystem(input_dist, job_generator, config.simulation_duration, servers, manager)
+    system = QueuingSystem(input_dist, job_generator, config.simulation_duration, servers, manager, eventbus)
     system.run()
 
     table = stats.get_general_stats()
