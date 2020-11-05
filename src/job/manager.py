@@ -4,43 +4,18 @@ from typing import List
 from src.job.jobs import Job
 from src.job.queue import JobStorage
 from src.job.server import JobProcessingServer
+from src.stats.eventbus import EventBus
 from src.systemtime import sleep
-
-
-class QueueSizeMetric:
-
-    def __init__(self) -> None:
-        self._sizes = []
-
-    def add(self, queue_size: int):
-        self._sizes.append(queue_size)
-
-    def average_size(self):
-        return sum(self._sizes) / len(self._sizes) if len(self._sizes) is not 0 else 0
-
-
-class ManagerStatsDecorator:
-
-    def process_stat(process_func):
-        def decorator(self, *args):
-            result = process_func(self, *args)
-            self._queue_size_metric.add(self._queue.size())
-            print("ManagerStatsDecorator: queue size = {}".format(self._queue.size()))
-            return result
-
-        return decorator
-
-    process_stat = staticmethod(process_stat)
 
 
 class ServerLoadManager:
 
-    def __init__(self, servers: List[JobProcessingServer], queue: JobStorage) -> None:
+    def __init__(self, servers: List[JobProcessingServer], queue: JobStorage, eventbus: EventBus) -> None:
         self._servers_dict = {server.id: server for server in servers}
         self._queue = queue
         self._lock = threading.Lock()
         self._stop = False
-        self._queue_size_metric = QueueSizeMetric()
+        self._eventbus = eventbus
 
     def run(self):
         # runs until stop command received and queue is cleared
@@ -62,17 +37,17 @@ class ServerLoadManager:
                               .format(job.id, server.id, self._queue.size()))
                         server.job = job
 
-    @ManagerStatsDecorator.process_stat
-    def process(self, job: Job):
+    def schedule(self, job: Job) -> bool:
         with self._lock:
-            if not self._assign_server(job):
-                self._queue_job(job)
+            scheduled = self._assign_server(job)
+            if not scheduled:
+                scheduled = self._queue_job(job)
+            if scheduled:
+                self._eventbus.job_schedule(job)
 
-    @property
-    def stats(self) -> QueueSizeMetric:
-        return self._queue_size_metric
+            return scheduled
 
-    def _queue_job(self, job: Job):
+    def _queue_job(self, job: Job) -> bool:
         dropped, success = self._queue.add(job)
         if not success:
             print("Manager: Job {} was dropped since queue is full (queue size = {})"
@@ -80,8 +55,10 @@ class ServerLoadManager:
         elif success and dropped is not None:
             print("Manager: {} was removed from queue since the {} has higher priority (queue size = {})"
                   .format(dropped, job, self._queue.size()))
+            self._eventbus.job_dropped_from_queue(dropped)
         else:
             print("Manager: {} was queued (queue size = {})".format(job, self._queue.size()))
+        return success
 
     def _assign_server(self, job: Job):
         found_server = False
@@ -95,8 +72,7 @@ class ServerLoadManager:
         if not found_server:  # idle server wasn't found, looking for a server which processing lower priority job
             for server in list(self._servers_dict.values()):
                 if server.job.priority > job.priority:
-                    # print("Manager: Server {} processing lower priority {} hence switching it to {}"
-                    #       .format(server.id, server.job, job))
+                    self._eventbus.job_processing_aborted(server.job)
                     server.job = job
                     found_server = True
 

@@ -1,32 +1,20 @@
-import functools
 import threading
-from typing import List
 
 from src.distribution import Distribution
 from src.job.jobs import Job
+from src.stats.eventbus import EventBus
 from src.systemtime import sleep, Stopwatch
-
-
-class JobProcessTimeMetric:
-
-    def __init__(self, job, process_time) -> None:
-        self._job = job
-        self._process_time = process_time
-
-    @property
-    def process_time(self):
-        return self._process_time
 
 
 class JobProcessingServer:
 
-    def __init__(self, processing_distribution: Distribution, id_) -> None:
+    def __init__(self, processing_distribution: Distribution, id_, eventbus: EventBus) -> None:
         self._distribution = processing_distribution
         self._stop = False
         self._job = None
         self._id = id_
-        self._job_metrics = []
         self._lock = threading.Lock()
+        self._eventbus = eventbus
 
     @property
     def id(self):
@@ -50,47 +38,31 @@ class JobProcessingServer:
         while self._stop is not True:
             job = self._job
             if job is not None:
-                self._process(job)
-                self._job = None
+                if self._process(job):
+                    self._job = None
         self._log("Server was stopped!")
 
     def stop(self):
         self._stop = True
 
-    @property
-    def stats(self) -> List[JobProcessTimeMetric]:
-        return self._job_metrics
-
-    def _process_stat(func):
-        @functools.wraps(func)
-        def decorator(self, *args):
-            job = args[0]
-
-            stopwatch = Stopwatch()
-            func(self, job)
-            process_time = stopwatch.elapsed()
-            self._job_metrics.append(JobProcessTimeMetric(job.id, process_time))
-
-        return decorator
-
-    @_process_stat
-    def _process(self, job: Job):
+    def _process(self, job: Job) -> bool:
         duration = int(self._distribution.next_random())
-        self._log("Processing job {}...".format(job.id))
+        self._log("Processing {}...".format(job))
         stopwatch = Stopwatch()
         finished = True
+        self._eventbus.job_process_start(job)
         while not stopwatch.is_elapsed(duration):
+            sleep(1)
             if self._job.id is not job.id:
                 finished = False
                 break
-            sleep(1)
         if finished:
             self._log("Job '{}' was processed for {}".format(job.id, stopwatch.elapsed()))
+            self._eventbus.job_was_processed(job)
         else:
             self._log("Processing of {} was aborted to start processing of {} with higher priority"
                       .format(job, self.job))
+        return finished
 
     def _log(self, msg):
         print("Server {}: {}".format(self._id, msg))
-
-    _process_stat = staticmethod(_process_stat)

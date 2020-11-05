@@ -38,7 +38,7 @@ class QueuingSystem:
             sleep(interval)
 
             job = self._job_generator.next()
-            self._manager.process(job)
+            self._manager.schedule(job)
 
         self._stop()
         elapsed = stopwatch.elapsed()
