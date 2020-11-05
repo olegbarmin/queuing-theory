@@ -9,7 +9,7 @@ QueuingModel:
   serversNumber: 2
   queueSize: 5
 
-  simulationDuration: 5000 # Duration of simulation (millis)
+  simulationDuration: 30000 # Duration of simulation (millis)
 
 
 
