@@ -1,4 +1,5 @@
-import sys
+import os
+from pathlib import Path
 from random import random
 
 from src.configuration import ConfigReader
@@ -10,7 +11,7 @@ from src.model import QueuingSystem
 from src.stats import SimulationStatistics
 
 if __name__ == '__main__':
-    conf_path = sys.argv[1]
+    conf_path = os.path.join(str(Path(__file__).parent.parent.joinpath()), "conf.yaml")
     config = ConfigReader(conf_path)
 
     input_dist = config.input_distribution

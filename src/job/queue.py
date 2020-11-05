@@ -1,6 +1,6 @@
 import functools
+import heapq
 import threading
-from queue import PriorityQueue
 from typing import Tuple, List
 
 from src.job.jobs import Job
@@ -16,6 +16,42 @@ class WaitTimeMetric:
     @property
     def wait_time(self):
         return self._wait_time
+
+
+class PriorityQueue:
+
+    def __init__(self, maxsize) -> None:
+        self._maxsize = maxsize
+        self._data = []
+
+    def put(self, job: Job):
+        """
+        When queue reaches max len, might replace job with lower priority with
+        job with higher one
+        """
+        success = False
+        if len(self._data) < self._maxsize:
+            heapq.heappush(self._data, job)
+            success = True
+        elif max(self._data).priority > job.priority:
+            lowest_priority = max(self._data)
+            self._data.remove(lowest_priority)
+            heapq.heapify(self._data)
+            heapq.heappush(self._data, job)
+            success = True
+        return success
+
+    def pop(self):
+        return heapq.heappop(self._data)
+
+    def full(self):
+        return len(self._data) is self._maxsize
+
+    def empty(self):
+        return len(self._data) is 0
+
+    def size(self):
+        return len(self._data)
 
 
 class JobStorage:
@@ -60,7 +96,7 @@ class JobStorage:
     def _pop(self) -> Tuple[Job, bool]:
         result = (None, False)
         if not self._queue.empty():
-            job = self._queue.get_nowait()
+            job = self._queue.pop()
             result = (job, True)
         return result
 
@@ -78,14 +114,10 @@ class JobStorage:
 
     @_add_stat
     def _add(self, job: Job) -> bool:
-        job_queue_success = False
-        if not self._queue.full():
-            self._queue.put_nowait(job)
-            job_queue_success = True
-        return job_queue_success
+        return self._queue.put(job)
 
     _add_stat = staticmethod(_add_stat)
     _pop_stat = staticmethod(_pop_stat)
 
     def size(self):
-        return self._queue.qsize()
+        return self._queue.size()

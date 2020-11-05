@@ -18,6 +18,9 @@ class Job:
     def __str__(self) -> str:
         return "Job(id: {}, priority: {})".format(self._id, self._priority)
 
+    def __eq__(self, o: object) -> bool:
+        return self._id is o.id if isinstance(o, Job) else super().__eq__(o)
+
     def __lt__(self, other):
         return self._priority < other.priority
 
