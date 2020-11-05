@@ -25,12 +25,12 @@ class JobProcessingServer:
 
     @property
     def job(self):
-        with self._lock:
-            return self._job
+        return self._job
 
     @job.setter
     def job(self, value: Job):
         with self._lock:
+            self._eventbus.job_process_start(value)
             self._job = value
 
     def run(self):
@@ -40,6 +40,7 @@ class JobProcessingServer:
             if job is not None:
                 if self._process(job):
                     self._job = None
+            sleep(1)
         self._log("Server was stopped!")
 
     def stop(self):
@@ -50,7 +51,6 @@ class JobProcessingServer:
         self._log("Processing {}...".format(job))
         stopwatch = Stopwatch()
         finished = True
-        self._eventbus.job_process_start(job)
         while not stopwatch.is_elapsed(duration):
             sleep(1)
             if self._job.id is not job.id:
