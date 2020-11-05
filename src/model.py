@@ -41,6 +41,7 @@ class QueuingSystem:
             sleep(interval)
 
             job = self._job_generator.next()
+            self._eventbus.job_arrived(job)
             self._manager.schedule(job)
 
         self._stop()

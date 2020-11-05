@@ -99,3 +99,22 @@ class SystemBusynessMetric:
     def busy_time(self):
         busy_states = filter(lambda state_change: state_change[0] is BUSY, self._state_changes)
         return sum(map(lambda x: x[1], busy_states))
+
+
+class JobDropMetric:
+    def __init__(self) -> None:
+        self._total_jobs = 0
+        self._processed_jobs = 0
+        self._dropped_jobs = 0
+
+    def record_job_arrival(self):
+        self._total_jobs = self._total_jobs + 1
+
+    def record_job_processed(self):
+        self._processed_jobs = self._processed_jobs + 1
+
+    def record_job_drop(self):
+        self._dropped_jobs = self._dropped_jobs + 1
+
+    def job_drop_chance(self):
+        return round(float(self._dropped_jobs) / float(self._total_jobs) * 100, 2)

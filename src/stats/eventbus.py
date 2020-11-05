@@ -3,6 +3,9 @@ import threading
 
 class Listener:
 
+    def job_arrived(self, job):
+        pass
+
     def job_schedule(self, job):
         pass
 
@@ -35,6 +38,11 @@ class EventBus:
 
     def add(self, listener: Listener):
         self._listeners.append(listener)
+
+    def job_arrived(self, job):
+        with self._lock:
+            for listener in self._listeners:
+                listener.job_arrived(job)
 
     def job_schedule(self, job):
         """
@@ -87,4 +95,6 @@ class EventBus:
         """
         All generated jobs were processed, and there wouldn't be more
         """
-        pass
+        with self._lock:
+            for listener in self._listeners:
+                listener.all_jobs_processed()

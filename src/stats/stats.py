@@ -6,7 +6,8 @@ from src.job.jobs import Job
 from src.job.queue import JobStorage
 from src.job.server import JobProcessingServer
 from src.stats.eventbus import Listener
-from src.stats.metrics import QueueSizeMetric, LoadMetric, JobProcessTimeMetric, WaitTimeMetric, SystemBusynessMetric
+from src.stats.metrics import QueueSizeMetric, LoadMetric, JobProcessTimeMetric, WaitTimeMetric, SystemBusynessMetric, \
+    JobDropMetric
 from src.systemtime import Stopwatch
 
 
@@ -18,12 +19,16 @@ class SimulationStatistics(Listener):
         self._queue_size_metric = QueueSizeMetric()
         self._wait_time_metrics = []
         self._busyness_metric = SystemBusynessMetric()
+        self._job_drop_metric = JobDropMetric()
 
         self._queue = queue
         self._servers = servers
 
         self._processing_time_dict = {}  # id to stopwatch
         self._queue_time_dict = {}  # id to stopwatch
+
+    def job_arrived(self, job):
+        self._job_drop_metric.record_job_arrival()
 
     def job_schedule(self, job: Job):
         print("SimulationStatistics: {} scheduled".format(job))
@@ -35,6 +40,7 @@ class SimulationStatistics(Listener):
     def job_processing_aborted(self, job):
         print("SimulationStatistics: {} processing aborted".format(job))
         del self._processing_time_dict[job.id]
+        self._job_drop_metric.record_job_drop()
 
     def job_process_start(self, job):
         self._processing_time_dict[job.id] = Stopwatch()
@@ -67,6 +73,7 @@ class SimulationStatistics(Listener):
     def job_dropped_from_queue(self, job):
         print("SimulationStatistics: {} dropped from queue".format(job))
         del self._queue_time_dict[job.id]
+        self._job_drop_metric.record_job_drop()
 
     def get_general_stats(self):
         _, avg_process_time, _ = self._process_time()
@@ -74,12 +81,14 @@ class SimulationStatistics(Listener):
         avg_queue_size = self._queue_size()
         avg_load = self._load_stat()
         idle_probability = self._idle_probability()
+        reject_probability = self._reject_probability()
         table = [
             ["Average job processing time", avg_process_time, "ms"],
             ["Average time in queue", avg_queue_time, "ms"],
             ["Average queue size", avg_queue_size, "jobs in queue"],
             ["Average jobs number in the system", avg_load, "jobs"],
-            ["Chance of system being in idle state", idle_probability, "%"]
+            ["Chance of system being idle", idle_probability, "%"],
+            ["Chance of reject", reject_probability, "%"]
         ]
         return tabulate(table, numalign="right")
 
@@ -89,6 +98,7 @@ class SimulationStatistics(Listener):
         self._job_processing_metrics.append(JobProcessTimeMetric(job, elapsed))
         print("SimulationStatistics: {} processed for {}".format(job, elapsed))
         del self._processing_time_dict[job.id]
+        self._job_drop_metric.record_job_processed()
 
     def _record_load(self):
         jobs_number = 0
@@ -147,3 +157,6 @@ class SimulationStatistics(Listener):
 
     def _record_system_busy(self):
         self._busyness_metric.record_busy()
+
+    def _reject_probability(self):
+        return self._job_drop_metric.job_drop_chance()
