@@ -54,6 +54,38 @@ class PriorityQueue:
         return len(self._data)
 
 
+class StatisticDecorator:
+
+    def pop_stat(pop_func):
+        @functools.wraps(pop_func)
+        def decorator(self):
+            job, success = pop_func(self)
+            if success:
+                job_id = job.id
+                stopwatch = self._job_wait_dict.pop(job_id)
+                wait_time = stopwatch.elapsed()
+                metric = WaitTimeMetric(job, wait_time)
+                self._wait_metrics.append(metric)
+            return job, success
+
+        return decorator
+
+    def add_stat(add_func):
+        @functools.wraps(add_func)
+        def decorator(self, *args):
+            job = args[0]
+            success = add_func(self, job)
+            if success:
+                job_id = job.id
+                self._job_wait_dict[job_id] = Stopwatch()
+            return success
+
+        return decorator
+
+    add_stat = staticmethod(add_stat)
+    pop_stat = staticmethod(pop_stat)
+
+
 class JobStorage:
 
     def __init__(self, queue_size) -> None:
@@ -78,21 +110,7 @@ class JobStorage:
     def stats(self) -> List[WaitTimeMetric]:
         return self._wait_metrics
 
-    def _pop_stat(pop_func):
-        @functools.wraps(pop_func)
-        def decorator(self):
-            job, success = pop_func(self)
-            if success:
-                job_id = job.id
-                stopwatch = self._job_wait_dict.pop(job_id)
-                wait_time = stopwatch.elapsed()
-                metric = WaitTimeMetric(job, wait_time)
-                self._wait_metrics.append(metric)
-            return job, success
-
-        return decorator
-
-    @_pop_stat
+    @StatisticDecorator.pop_stat
     def _pop(self) -> Tuple[Job, bool]:
         result = (None, False)
         if not self._queue.empty():
@@ -100,24 +118,9 @@ class JobStorage:
             result = (job, True)
         return result
 
-    def _add_stat(add_func):
-        @functools.wraps(add_func)
-        def decorator(self, *args):
-            job = args[0]
-            success = add_func(self, job)
-            if success:
-                job_id = job.id
-                self._job_wait_dict[job_id] = Stopwatch()
-            return success
-
-        return decorator
-
-    @_add_stat
+    @StatisticDecorator.add_stat
     def _add(self, job: Job) -> bool:
         return self._queue.put(job)
-
-    _add_stat = staticmethod(_add_stat)
-    _pop_stat = staticmethod(_pop_stat)
 
     def size(self):
         return self._queue.size()
