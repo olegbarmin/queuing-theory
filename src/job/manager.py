@@ -41,10 +41,13 @@ class ServerLoadManager:
                 self._queue_job(job)
 
     def _queue_job(self, job: Job):
-        success = self._queue.add(job)
+        dropped, success = self._queue.add(job)
         if not success:
             print("Manager: Job {} was dropped since queue is full (queue size = {})"
                   .format(job.id, self._queue.size()))
+        elif success and dropped is not None:
+            print("Manager: {} was removed from queue since the {} has higher priority (queue size = {})"
+                  .format(dropped, job, self._queue.size()))
         else:
             print("Manager: {} was queued (queue size = {})".format(job, self._queue.size()))
 

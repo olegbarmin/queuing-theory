@@ -24,22 +24,25 @@ class PriorityQueue:
         self._maxsize = maxsize
         self._data = []
 
-    def put(self, job: Job):
+    def put(self, job: Job) -> Tuple[Job, bool]:
         """
         When queue reaches max len, might replace job with lower priority with
-        job with higher one
+        job with higher one.
+        Returns tuple of Job and bool. Job is None when no job was dropped from queue.
         """
         success = False
+        dropped_job = None
         if len(self._data) < self._maxsize:
             heapq.heappush(self._data, job)
             success = True
         elif max(self._data).priority > job.priority:
             lowest_priority = max(self._data)
             self._data.remove(lowest_priority)
+            dropped_job = lowest_priority
             heapq.heapify(self._data)
             heapq.heappush(self._data, job)
             success = True
-        return success
+        return dropped_job, success
 
     def pop(self):
         return heapq.heappop(self._data)
@@ -94,7 +97,7 @@ class JobStorage:
         self._job_wait_dict = {}  # job ID: Stopwatch
         self._wait_metrics = []
 
-    def add(self, job: Job) -> bool:
+    def add(self, job: Job) -> Tuple[Job, bool]:
         with self._lock:
             return self._add(job)
 
@@ -119,7 +122,7 @@ class JobStorage:
         return result
 
     @StatisticDecorator.add_stat
-    def _add(self, job: Job) -> bool:
+    def _add(self, job: Job) -> Tuple[Job, bool]:
         return self._queue.put(job)
 
     def size(self):
