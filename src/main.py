@@ -18,7 +18,7 @@ if __name__ == '__main__':
     time_dist = config.process_time_distribution
 
     id_gen = AtomicInteger()
-    job_generator = JobGenerator(lambda: id_gen.increment(), lambda: int(random() * 10) % 3 + 1)
+    job_generator = JobGenerator(lambda: id_gen.increment(), lambda: int(random() * 10) % 2 + 1)
 
     servers = [JobProcessingServer(time_dist, i + 1) for i in range(config.servers_number)]
 
@@ -40,3 +40,12 @@ if __name__ == '__main__':
     table = stats.get_wait_time_stats()
     print("------- Job Wait Time Stats -------")
     print(table)
+
+    table = stats.get_general_stats()
+    print("------- General Stats -------")
+    print(table)
+
+    # todo: avg. queue size
+    # todo: jobs in the system
+    # todo: probability of system being idle
+    # todo: probability of reject
