@@ -7,6 +7,32 @@ from src.job.server import JobProcessingServer
 from src.systemtime import sleep
 
 
+class QueueSizeMetric:
+
+    def __init__(self) -> None:
+        self._sizes = []
+
+    def add(self, queue_size: int):
+        self._sizes.append(queue_size)
+
+    def average_size(self):
+        return sum(self._sizes) / len(self._sizes) if len(self._sizes) is not 0 else 0
+
+
+class ManagerStatsDecorator:
+
+    def process_stat(process_func):
+        def decorator(self, *args):
+            result = process_func(self, *args)
+            self._queue_size_metric.add(self._queue.size())
+            print("ManagerStatsDecorator: queue size = {}".format(self._queue.size()))
+            return result
+
+        return decorator
+
+    process_stat = staticmethod(process_stat)
+
+
 class ServerLoadManager:
 
     def __init__(self, servers: List[JobProcessingServer], queue: JobStorage) -> None:
@@ -14,6 +40,7 @@ class ServerLoadManager:
         self._queue = queue
         self._lock = threading.Lock()
         self._stop = False
+        self._queue_size_metric = QueueSizeMetric()
 
     def run(self):
         # runs until stop command received and queue is cleared
@@ -35,10 +62,15 @@ class ServerLoadManager:
                               .format(job.id, server.id, self._queue.size()))
                         server.job = job
 
+    @ManagerStatsDecorator.process_stat
     def process(self, job: Job):
         with self._lock:
             if not self._assign_server(job):
                 self._queue_job(job)
+
+    @property
+    def stats(self) -> QueueSizeMetric:
+        return self._queue_size_metric
 
     def _queue_job(self, job: Job):
         dropped, success = self._queue.add(job)

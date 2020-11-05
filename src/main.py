@@ -32,6 +32,7 @@ if __name__ == '__main__':
     for server in servers:
         stats.add_server_processing_metrics(server.stats)
     stats.add_wait_time_metrics(queue.stats)
+    stats.add_manager_stats(manager.stats)
 
     table = stats.get_server_processing_stats()
     print("------- Job Processing Time Stats -------")
@@ -45,7 +46,6 @@ if __name__ == '__main__':
     print("------- General Stats -------")
     print(table)
 
-    # todo: avg. queue size
     # todo: jobs in the system
     # todo: probability of system being idle
     # todo: probability of reject

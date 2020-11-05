@@ -57,7 +57,7 @@ class PriorityQueue:
         return len(self._data)
 
 
-class StatisticDecorator:
+class QueueStatsDecorator:
 
     def pop_stat(pop_func):
         @functools.wraps(pop_func)
@@ -94,6 +94,7 @@ class JobStorage:
     def __init__(self, queue_size) -> None:
         self._queue = PriorityQueue(maxsize=queue_size)
         self._lock = threading.Lock()
+        # statistic fields
         self._job_wait_dict = {}  # job ID: Stopwatch
         self._wait_metrics = []
 
@@ -113,7 +114,7 @@ class JobStorage:
     def stats(self) -> List[WaitTimeMetric]:
         return self._wait_metrics
 
-    @StatisticDecorator.pop_stat
+    @QueueStatsDecorator.pop_stat
     def _pop(self) -> Tuple[Job, bool]:
         result = (None, False)
         if not self._queue.empty():
@@ -121,7 +122,7 @@ class JobStorage:
             result = (job, True)
         return result
 
-    @StatisticDecorator.add_stat
+    @QueueStatsDecorator.add_stat
     def _add(self, job: Job) -> Tuple[Job, bool]:
         return self._queue.put(job)
 
