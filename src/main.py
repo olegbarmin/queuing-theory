@@ -35,6 +35,5 @@ if __name__ == '__main__':
     print("------- General Stats -------")
     print(table)
 
-    # todo: jobs in the system
     # todo: probability of system being idle
     # todo: probability of reject
