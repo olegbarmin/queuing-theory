@@ -34,6 +34,3 @@ if __name__ == '__main__':
     table = stats.get_general_stats()
     print("------- General Stats -------")
     print(table)
-
-    # todo: probability of system being idle
-    # todo: probability of reject
