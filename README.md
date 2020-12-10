@@ -10,6 +10,9 @@ python3.9 -m src.main
 
 ### Run results: 
 Sample configuration:
+
+todo: update yaml example
+
 ```yaml
 QueuingModel:
   InputDistribution: # Erlang Distribution

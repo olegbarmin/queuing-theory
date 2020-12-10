@@ -4,7 +4,7 @@ from typing import List
 from src.distribution import Distribution
 from src.job.jobs import JobGenerator
 from src.job.manager import ServerLoadManager
-from src.job.server import JobProcessingServer
+from src.job.server import Server
 from src.stats.eventbus import EventBus
 from src.systemtime import sleep, Stopwatch
 
@@ -12,7 +12,7 @@ from src.systemtime import sleep, Stopwatch
 class QueuingSystem:
 
     def __init__(self, input_interval_generator: Distribution, job_generator: JobGenerator,
-                 simulation_duration, servers: List[JobProcessingServer], manager: ServerLoadManager,
+                 simulation_duration, servers: List[Server], manager: ServerLoadManager,
                  eventbus: EventBus) -> None:
         self._job_generator = job_generator
         self._interval_generator = input_interval_generator
@@ -60,7 +60,7 @@ class QueuingSystem:
             server.stop()
             self._wait_server_stop(server)
 
-    def _wait_server_stop(self, server: JobProcessingServer):
+    def _wait_server_stop(self, server: Server):
         thread = self._server_to_thread_dict[server.id]
         QueuingSystem._wait_for_thread_stop(thread)
 

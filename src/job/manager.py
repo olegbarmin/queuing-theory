@@ -3,14 +3,14 @@ from typing import List
 
 from src.job.jobs import Job
 from src.job.queue import JobStorage
-from src.job.server import JobProcessingServer
+from src.job.server import Server
 from src.stats.eventbus import EventBus
 from src.systemtime import sleep
 
 
 class ServerLoadManager:
 
-    def __init__(self, servers: List[JobProcessingServer], queue: JobStorage, eventbus: EventBus) -> None:
+    def __init__(self, servers: List[Server], queue: JobStorage, eventbus: EventBus) -> None:
         self._servers_dict = {server.id: server for server in servers}
         self._queue = queue
         self._lock = threading.Lock()

@@ -1,10 +1,13 @@
 import yaml
 
 from src.distribution import Distribution, ExponentialDistribution, GammaDistribution
+from src.job.server import Server, ServerTypes
+from src.stats.eventbus import EventBus
 
 CONFIG_ROOT_KEY = "QueuingModel"
 INPUT_DISTRIBUTION_KEY = "InputDistribution"
-PROCESS_TIME_DISTRIBUTION = "ProcessTimeDistribution"
+SERVERS = "Servers"
+GATEWAY = "Gateway"
 
 SHAPE_KEY = "shape"
 SCALE_KEY = "scale"
@@ -27,16 +30,12 @@ class ConfigReader:
         scale = float(dist_config[SCALE_KEY])
         return ExponentialDistribution(scale)
 
-    @property
-    def process_time_distribution(self) -> Distribution:
-        dist_config = self._get_config()[PROCESS_TIME_DISTRIBUTION]
+    def gateway(self, event_bus: EventBus) -> Server:
+        dist_config = self._get_config()[SERVERS][GATEWAY]
         scale = float(dist_config[SCALE_KEY])
         shape = float(dist_config[SHAPE_KEY])
-        return GammaDistribution(shape, scale)
-
-    @property
-    def servers_number(self) -> int:
-        return self._get_config()[SERVERS_NUMBER_KEY]
+        distribution = GammaDistribution(shape, scale)
+        return Server(ServerTypes.GATEWAY, distribution, 1, event_bus)
 
     @property
     def queue_size(self) -> int:

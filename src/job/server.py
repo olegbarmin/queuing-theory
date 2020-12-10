@@ -1,4 +1,5 @@
 import threading
+from enum import Enum
 
 from src.distribution import Distribution
 from src.job.jobs import Job
@@ -6,9 +7,14 @@ from src.stats.eventbus import EventBus
 from src.systemtime import sleep
 
 
-class JobProcessingServer:
+class ServerTypes(Enum):
+    GATEWAY = "Gateway"
 
-    def __init__(self, processing_distribution: Distribution, id_, eventbus: EventBus) -> None:
+
+class Server:
+
+    def __init__(self, _type: ServerTypes, processing_distribution: Distribution, id_, eventbus: EventBus) -> None:
+        self._type = _type
         self._distribution = processing_distribution
         self._stop = False
         self._job = None
@@ -55,4 +61,4 @@ class JobProcessingServer:
         self._eventbus.job_was_processed(job)
 
     def _log(self, msg):
-        print("Server {}: {}".format(self._id, msg))
+        print(f"Server {self._type.name} #{self._id}: {msg}")

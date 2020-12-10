@@ -4,7 +4,7 @@ from tabulate import tabulate
 
 from src.job.jobs import Job
 from src.job.queue import JobStorage
-from src.job.server import JobProcessingServer
+from src.job.server import Server
 from src.stats.eventbus import Listener
 from src.stats.metrics import QueueSizeMetric, LoadMetric, JobProcessTimeMetric, WaitTimeMetric, SystemBusynessMetric, \
     JobDropMetric
@@ -13,7 +13,7 @@ from src.systemtime import Stopwatch
 
 class SimulationStatistics(Listener):
 
-    def __init__(self, queue: JobStorage, servers: List[JobProcessingServer]) -> None:
+    def __init__(self, queue: JobStorage, servers: List[Server]) -> None:
         self._job_processing_metrics = []
         self._load_metric = LoadMetric()
         self._queue_size_metric = QueueSizeMetric()
