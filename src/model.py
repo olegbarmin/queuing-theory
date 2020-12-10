@@ -23,15 +23,12 @@ class QueuingSystem:
         self._eventbus = eventbus
 
     def run(self):
-
         self._manager_threads = []
-        for t, m in list(self._server_managers.items()):
-            thread = threading.Thread(target=m.run)
-            self._manager_threads.append(thread);
-            thread.start()
-
         self._servers_threads = []
         for t, m in list(self._server_managers.items()):
+            thread = threading.Thread(target=m.run)
+            self._manager_threads.append(thread)
+            thread.start()
             for server in m.servers:
                 thread = threading.Thread(target=server.run)
                 self._servers_threads.append(thread)
@@ -58,10 +55,10 @@ class QueuingSystem:
     def _stop(self):
         for t, m in list(self._server_managers.items()):
             m.stop()
+        QueuingSystem._wait_for_thread_stop(self._manager_threads)
         for t, m in list(self._server_managers.items()):
             for s in m.servers:
                 s.stop()
-        QueuingSystem._wait_for_thread_stop(self._manager_threads)
         QueuingSystem._wait_for_thread_stop(self._servers_threads)
 
     @staticmethod
