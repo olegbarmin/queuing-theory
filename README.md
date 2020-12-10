@@ -1,11 +1,11 @@
 ### Requirements
 
-- Python 3.5 or above
+- Python 3.9 or above
 - `tabulate` python lib
 - `yaml` python lib 
 ### How to run
 ```
-python3.5 src/main.py
+python3.9 -m src.main
 ```
 
 ### Run results: 
