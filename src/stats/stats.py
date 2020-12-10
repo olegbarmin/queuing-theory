@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Dict
 
 from tabulate import tabulate
 
 from src.job.jobs import Job
 from src.job.queue import JobStorage
-from src.job.server import Server
+from src.job.server import Server, ServerType
 from src.stats.eventbus import Listener
 from src.stats.metrics import QueueSizeMetric, LoadMetric, JobProcessTimeMetric, WaitTimeMetric, SystemBusynessMetric, \
     JobDropMetric
@@ -13,7 +13,7 @@ from src.systemtime import Stopwatch
 
 class SimulationStatistics(Listener):
 
-    def __init__(self, queue: JobStorage, servers: List[Server]) -> None:
+    def __init__(self, queue: JobStorage, servers: Dict[ServerType, List[Server]]) -> None:
         self._job_processing_metrics = []
         self._load_metric = LoadMetric()
         self._queue_size_metric = QueueSizeMetric()
@@ -22,7 +22,8 @@ class SimulationStatistics(Listener):
         self._job_drop_metric = JobDropMetric()
 
         self._queue = queue
-        self._servers = servers
+        flatten = lambda t: [item for sublist in t for item in sublist]
+        self._servers = flatten(list(servers.values()))
 
         self._processing_time_dict = {}  # id to stopwatch
         self._queue_time_dict = {}  # id to stopwatch

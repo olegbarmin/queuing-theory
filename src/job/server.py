@@ -7,13 +7,13 @@ from src.stats.eventbus import EventBus
 from src.systemtime import sleep
 
 
-class ServerTypes(Enum):
+class ServerType(Enum):
     GATEWAY = "Gateway"
 
 
 class Server:
 
-    def __init__(self, _type: ServerTypes, processing_distribution: Distribution, id_, eventbus: EventBus) -> None:
+    def __init__(self, _type: ServerType, processing_distribution: Distribution, id_, eventbus: EventBus) -> None:
         self._type = _type
         self._distribution = processing_distribution
         self._stop = False
@@ -25,6 +25,10 @@ class Server:
     @property
     def id(self):
         return self._id
+
+    @property
+    def type(self):
+        return self._type
 
     def is_idle(self) -> bool:
         return self._job is None

@@ -4,7 +4,7 @@ from enum import Enum
 import numpy as np
 
 
-class JobTypes(Enum):
+class JobType(Enum):
     SHOW_PRODUCTS = 'show_products'
     CHECKOUT = 'checkout'
     PAYMENT = 'payment'
@@ -12,7 +12,7 @@ class JobTypes(Enum):
 
 class Job:
 
-    def __init__(self, id_: int, type: JobTypes) -> None:
+    def __init__(self, id_: int, type: JobType) -> None:
         self._id = id_
         self._type = type
 
@@ -39,8 +39,8 @@ class AtomicInteger:
             return self._val
 
 
-def type_generation() -> JobTypes:
-    types_ = [JobTypes.SHOW_PRODUCTS, JobTypes.CHECKOUT, JobTypes.PAYMENT]
+def type_generation() -> JobType:
+    types_ = [JobType.SHOW_PRODUCTS, JobType.CHECKOUT, JobType.PAYMENT]
     return np.random.choice(types_, 1, p=[0.85, 0.1, 0.05])[0]
 
 

@@ -1,10 +1,10 @@
 import threading
-from typing import List
+from typing import Dict, List
 
 from src.distribution import Distribution
 from src.job.jobs import JobGenerator
 from src.job.manager import ServerLoadManager
-from src.job.server import Server
+from src.job.server import ServerType
 from src.stats.eventbus import EventBus
 from src.systemtime import sleep, Stopwatch
 
@@ -12,26 +12,31 @@ from src.systemtime import sleep, Stopwatch
 class QueuingSystem:
 
     def __init__(self, input_interval_generator: Distribution, job_generator: JobGenerator,
-                 simulation_duration, servers: List[Server], manager: ServerLoadManager,
+                 simulation_duration, servers: Dict[ServerType, ServerLoadManager],
                  eventbus: EventBus) -> None:
         self._job_generator = job_generator
         self._interval_generator = input_interval_generator
         self._duration = simulation_duration
-        self._servers = servers
-        self._server_to_thread_dict = None
-        self._manager = manager
-        self._manager_thread = None
+        self._server_managers = servers
+        self._manager_threads = None
+        self._servers_threads = None
         self._eventbus = eventbus
 
     def run(self):
-        server_to_thread_dict = {server.id: threading.Thread(target=server.run) for server in self._servers}
-        self._server_to_thread_dict = server_to_thread_dict
 
-        self._manager_thread = threading.Thread(target=self._manager.run)
-        self._manager_thread.start()
-
-        for thread in list(server_to_thread_dict.values()):
+        self._manager_threads = []
+        for t, m in list(self._server_managers.items()):
+            thread = threading.Thread(target=m.run)
+            self._manager_threads.append(thread);
             thread.start()
+
+        self._servers_threads = []
+        for t, m in list(self._server_managers.items()):
+            for server in m.servers:
+                thread = threading.Thread(target=server.run)
+                self._servers_threads.append(thread)
+                thread.start()
+
         self._start()
 
     def _start(self):
@@ -42,7 +47,7 @@ class QueuingSystem:
 
             job = self._job_generator.next()
             self._eventbus.job_arrived(job)
-            self._manager.schedule(job)
+            self._server_managers[ServerType.GATEWAY].schedule(job)
 
         self._stop()
         self._eventbus.all_jobs_processed()
@@ -51,22 +56,17 @@ class QueuingSystem:
         print("System: Simulation took {} ms".format(elapsed))
 
     def _stop(self):
-        self._manager.stop()
-        QueuingSystem._wait_for_thread_stop(self._manager_thread)
-        self._stop_servers()
-
-    def _stop_servers(self):
-        for server in self._servers:
-            server.stop()
-            self._wait_server_stop(server)
-
-    def _wait_server_stop(self, server: Server):
-        thread = self._server_to_thread_dict[server.id]
-        QueuingSystem._wait_for_thread_stop(thread)
-
-        print("System: Server {} finished execution".format(server.id))
+        for t, m in list(self._server_managers.items()):
+            m.stop()
+        for t, m in list(self._server_managers.items()):
+            for s in m.servers:
+                s.stop()
+        QueuingSystem._wait_for_thread_stop(self._manager_threads)
+        QueuingSystem._wait_for_thread_stop(self._servers_threads)
 
     @staticmethod
-    def _wait_for_thread_stop(thread: threading.Thread):
-        while thread.is_alive():
+    def _wait_for_thread_stop(threads: List[threading.Thread]):
+        is_alive = True
+        while is_alive:
+            is_alive = all([t.is_alive() for t in threads])
             sleep(1)

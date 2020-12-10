@@ -6,23 +6,30 @@ from src.job.queue import JobStorage
 from src.job.server import Server
 from src.stats.eventbus import EventBus
 from src.systemtime import sleep
+from src.thread import Runnable
 
 
-class ServerLoadManager:
+class ServerLoadManager(Runnable):
 
     def __init__(self, servers: List[Server], queue: JobStorage, eventbus: EventBus) -> None:
+        super().__init__()
         self._servers_dict = {server.id: server for server in servers}
+        self._type = servers[0].type
         self._queue = queue
         self._lock = threading.Lock()
         self._stop = False
         self._eventbus = eventbus
+
+    @property
+    def servers(self):
+        return list(self._servers_dict.values())
 
     def run(self):
         # runs until stop command received and queue is cleared
         while self._stop is not True or (self._stop is True and not self._queue.is_empty()):
             self._try_pick_job_from_queue()
             sleep(1)
-        print("Manager: Queue is empty, queue clearing thread stopped.")
+        self.log("Queue is empty, queue clearing thread stopped.")
 
     def stop(self):
         self._stop = True
@@ -33,8 +40,8 @@ class ServerLoadManager:
                 if server.is_idle():
                     job, exist = self._queue.pop()
                     if exist:
-                        print("Manager: Picking job {} from queue to {} server (queue size = {})"
-                              .format(job, server.id, self._queue.size()))
+                        self.log("Picking job {} from queue to {} server (queue size = {})"
+                                 .format(job, server.id, self._queue.size()))
                         self._eventbus.job_pop_from_queue(job)
                         server.job = job
 
@@ -51,11 +58,11 @@ class ServerLoadManager:
     def _queue_job(self, job: Job) -> bool:
         success = self._queue.add(job)
         if success:
-            print("Manager: {} was queued (queue size = {})".format(job, self._queue.size()))
+            self.log("{} was queued (queue size = {})".format(job, self._queue.size()))
             self._eventbus.job_queued(job)
         else:
-            print("Manager: Job {} was dropped since queue is full (queue size = {})"
-                  .format(job.id, self._queue.size()))
+            self.log("Job {} was dropped since queue is full (queue size = {})"
+                     .format(job.id, self._queue.size()))
             self._eventbus.job_rejected(job)
 
         return success
@@ -64,9 +71,12 @@ class ServerLoadManager:
         found_server = False
         for server in list(self._servers_dict.values()):
             if server.is_idle():
-                print("Manager: Processing job {} directly by {} server".format(job.id, server.id))
+                self.log("Processing job {} directly by {} server".format(job.id, server.id))
                 server.job = job
                 found_server = True
                 break
 
         return found_server
+
+    def log(self, msg):
+        print(f"Manager ({self._type.name}): {msg}")
