@@ -1,3 +1,5 @@
+from typing import List
+
 import yaml
 
 from src.distribution import Distribution, ExponentialDistribution, GammaDistribution
@@ -6,14 +8,15 @@ from src.stats.eventbus import EventBus
 
 CONFIG_ROOT_KEY = "QueuingModel"
 INPUT_DISTRIBUTION_KEY = "InputDistribution"
-SERVERS = "Servers"
-GATEWAY = "Gateway"
+SERVERS_KEY = "Servers"
+GATEWAY_KEY = "Gateway"
 
 SHAPE_KEY = "shape"
 SCALE_KEY = "scale"
 RATE_KEY = "rate"
 
-SERVERS_NUMBER_KEY = "serversNumber"
+QUANTITY_KEY = "quantity"
+
 QUEUE_SIZE_KEY = "queueSize"
 SIMULATION_DURATION_KEY = "simulationDuration"
 
@@ -30,12 +33,14 @@ class ConfigReader:
         scale = float(dist_config[SCALE_KEY])
         return ExponentialDistribution(scale)
 
-    def gateway(self, event_bus: EventBus) -> Server:
-        dist_config = self._get_config()[SERVERS][GATEWAY]
+    def gateways(self, event_bus: EventBus) -> List[Server]:
+        dist_config = self._get_config()[SERVERS_KEY][GATEWAY_KEY]
         scale = float(dist_config[SCALE_KEY])
         shape = float(dist_config[SHAPE_KEY])
+        quantity = int(dist_config[QUANTITY_KEY])
         distribution = GammaDistribution(shape, scale)
-        return Server(ServerTypes.GATEWAY, distribution, 1, event_bus)
+
+        return [Server(ServerTypes.GATEWAY, distribution, i + 1, event_bus) for i in range(quantity)]
 
     @property
     def queue_size(self) -> int:

@@ -19,7 +19,7 @@ if __name__ == '__main__':
     job_generator = JobGenerator(id_gen.increment, type_generation)
 
     eventbus = EventBus()
-    servers = [config.gateway(eventbus)]
+    servers = config.gateways(eventbus)
     queue = JobStorage(config.queue_size)
     manager = ServerLoadManager(servers, queue, eventbus)
     stats = SimulationStatistics(queue, servers)
