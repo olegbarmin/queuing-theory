@@ -1,6 +1,6 @@
 import yaml
 
-from src.distribution import Distribution, ErlangDistribution, ExponentialDistribution
+from src.distribution import Distribution, ExponentialDistribution, GammaDistribution
 
 CONFIG_ROOT_KEY = "QueuingModel"
 INPUT_DISTRIBUTION_KEY = "InputDistribution"
@@ -24,9 +24,9 @@ class ConfigReader:
     @property
     def input_distribution(self) -> Distribution:
         dist_config = self._get_config()[INPUT_DISTRIBUTION_KEY]
-        shape = int(dist_config[SHAPE_KEY])
+        shape = float(dist_config[SHAPE_KEY])
         scale = float(dist_config[SCALE_KEY])
-        return ErlangDistribution(shape, scale)
+        return GammaDistribution(shape, scale)
 
     @property
     def process_time_distribution(self) -> Distribution:

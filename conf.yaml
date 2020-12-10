@@ -1,5 +1,5 @@
 QueuingModel:
-  InputDistribution: # Erlang Distribution
+  InputDistribution: # Gamma Distribution
     shape: 2 # Distribution shape - integer
     scale: 100 # Distribution rate - average interval between jobs arrival (millis)
 

@@ -2,6 +2,8 @@ import functools
 import math
 import random
 
+import numpy as np
+
 
 def production(function, stop: int, start: int = 1) -> float:
     """
@@ -40,6 +42,24 @@ class ErlangDistribution(Distribution):
     def _production(self):
         m = self._shape
         return production(lambda x: random.random(), m)
+
+
+class GammaDistribution(Distribution):
+
+    def __init__(self, shape, scale) -> None:
+        super().__init__()
+        if shape < 0 or scale < 0:
+            raise Exception("Both shape and scale of Gamma distribution must be greater than 0")
+
+        self._shape = float(shape)  # k - shape parameter
+        self._scale = float(scale)  # scale theta
+
+    def next_random(self) -> float:
+        """
+        Ahrens-Dieter acceptance–rejection method
+        https://en.wikipedia.org/wiki/Gamma_distribution#Generating_gamma-distributed_random_variables
+        """
+        return np.random.gamma(self._shape, self._scale)
 
 
 class ExponentialDistribution(Distribution):
