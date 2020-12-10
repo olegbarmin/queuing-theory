@@ -120,7 +120,7 @@ class SimulationStatistics(Listener):
         time_per_job = [stat.wait_time for stat in stats]
         total_time = sum(time_per_job)
         queued_jobs_number = len(time_per_job)
-        avg_time = total_time / queued_jobs_number if queued_jobs_number is not 0 else 0
+        avg_time = total_time / queued_jobs_number if queued_jobs_number != 0 else 0
         return total_time, avg_time, queued_jobs_number
 
     def _queue_size(self):
