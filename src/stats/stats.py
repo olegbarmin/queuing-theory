@@ -37,11 +37,6 @@ class SimulationStatistics(Listener):
 
         self._record_system_busy()
 
-    def job_processing_aborted(self, job):
-        print("SimulationStatistics: {} processing aborted".format(job))
-        del self._processing_time_dict[job.id]
-        self._job_drop_metric.record_job_drop()
-
     def job_process_start(self, job):
         self._processing_time_dict[job.id] = Stopwatch()
         print("SimulationStatistics: {} processing started".format(job))
@@ -70,9 +65,8 @@ class SimulationStatistics(Listener):
         self._wait_time_metrics.append(WaitTimeMetric(job, elapsed))
         del self._queue_time_dict[job.id]
 
-    def job_dropped_from_queue(self, job):
-        print("SimulationStatistics: {} dropped from queue".format(job))
-        del self._queue_time_dict[job.id]
+    def job_rejected(self, job):
+        print(f"SimulationStatistics: {job} rejected")
         self._job_drop_metric.record_job_drop()
 
     def get_general_stats(self):

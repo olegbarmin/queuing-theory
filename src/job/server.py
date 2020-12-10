@@ -3,7 +3,7 @@ import threading
 from src.distribution import Distribution
 from src.job.jobs import Job
 from src.stats.eventbus import EventBus
-from src.systemtime import sleep, Stopwatch
+from src.systemtime import sleep
 
 
 class JobProcessingServer:
@@ -30,6 +30,8 @@ class JobProcessingServer:
     @job.setter
     def job(self, value: Job):
         with self._lock:
+            if self._job is not None:
+                raise Exception(f"Cannot start processing of {value} since is {self._job} is under processing")
             self._eventbus.job_process_start(value)
             self._job = value
 
@@ -38,31 +40,19 @@ class JobProcessingServer:
         while self._stop is not True:
             job = self._job
             if job is not None:
-                if self._process(job):
-                    self._job = None
+                self._process(job)
+                self._job = None
             sleep(1)
         self._log("Server was stopped!")
 
     def stop(self):
         self._stop = True
 
-    def _process(self, job: Job) -> bool:
+    def _process(self, job: Job):
         duration = int(self._distribution.next_random())
         self._log("Processing {}...".format(job))
-        stopwatch = Stopwatch()
-        finished = True
-        while not stopwatch.is_elapsed(duration):
-            sleep(1)
-            if self._job.id is not job.id:
-                finished = False
-                break
-        if finished:
-            self._log("Job '{}' was processed for {}".format(job.id, stopwatch.elapsed()))
-            self._eventbus.job_was_processed(job)
-        else:
-            self._log("Processing of {} was aborted to start processing of {} with higher priority"
-                      .format(job, self.job))
-        return finished
+        sleep(duration)
+        self._eventbus.job_was_processed(job)
 
     def _log(self, msg):
         print("Server {}: {}".format(self._id, msg))

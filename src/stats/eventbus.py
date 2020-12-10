@@ -9,16 +9,13 @@ class Listener:
     def job_schedule(self, job):
         pass
 
-    def job_processing_aborted(self, job):
-        pass
-
     def job_queued(self, job):
         pass
 
     def job_pop_from_queue(self, job):
         pass
 
-    def job_dropped_from_queue(self, job):
+    def job_rejected(self, job):
         pass
 
     def job_was_processed(self, job):
@@ -52,11 +49,6 @@ class EventBus:
             for listener in self._listeners:
                 listener.job_schedule(job)
 
-    def job_processing_aborted(self, job):
-        with self._lock:
-            for listener in self._listeners:
-                listener.job_processing_aborted(job)
-
     def job_queued(self, job):
         """
         Job was added into the queue
@@ -70,10 +62,10 @@ class EventBus:
             for listener in self._listeners:
                 listener.job_pop_from_queue(job)
 
-    def job_dropped_from_queue(self, job):
+    def job_rejected(self, job):
         with self._lock:
             for listener in self._listeners:
-                listener.job_dropped_from_queue(job)
+                listener.job_rejected(job)
 
     def job_process_start(self, job):
         """

@@ -49,18 +49,15 @@ class ServerLoadManager:
             return scheduled
 
     def _queue_job(self, job: Job) -> bool:
-        dropped, success = self._queue.add(job)
-        if not success:
-            print("Manager: Job {} was dropped since queue is full (queue size = {})"
-                  .format(job.id, self._queue.size()))
-        elif success and dropped is not None:
-            print("Manager: {} was removed from queue since the {} has higher priority (queue size = {})"
-                  .format(dropped, job, self._queue.size()))
-            self._eventbus.job_dropped_from_queue(dropped)
-            self._eventbus.job_queued(job)
-        else:
+        success = self._queue.add(job)
+        if success:
             print("Manager: {} was queued (queue size = {})".format(job, self._queue.size()))
             self._eventbus.job_queued(job)
+        else:
+            print("Manager: Job {} was dropped since queue is full (queue size = {})"
+                  .format(job.id, self._queue.size()))
+            self._eventbus.job_rejected(job)
+
         return success
 
     def _assign_server(self, job: Job):
@@ -71,13 +68,5 @@ class ServerLoadManager:
                 server.job = job
                 found_server = True
                 break
-
-        if not found_server:  # idle server wasn't found, looking for a server which processing lower priority job
-            for server in list(self._servers_dict.values()):
-                if server.job.priority > job.priority:
-                    self._eventbus.job_processing_aborted(server.job)
-                    server.job = job
-                    found_server = True
-                    break
 
         return found_server

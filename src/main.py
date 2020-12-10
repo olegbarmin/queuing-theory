@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from random import random
 
 from src.configuration import ConfigReader
 from src.job.jobs import JobGenerator, AtomicInteger
@@ -19,7 +18,7 @@ if __name__ == '__main__':
     time_dist = config.process_time_distribution
 
     id_gen = AtomicInteger()
-    job_generator = JobGenerator(lambda: id_gen.increment(), lambda: int(random() * 10) % 2 + 1)
+    job_generator = JobGenerator(lambda: id_gen.increment())
 
     eventbus = EventBus()
     servers = [JobProcessingServer(time_dist, i + 1, eventbus) for i in range(config.servers_number)]
