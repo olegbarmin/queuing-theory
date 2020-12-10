@@ -24,15 +24,15 @@ class ConfigReader:
     @property
     def input_distribution(self) -> Distribution:
         dist_config = self._get_config()[INPUT_DISTRIBUTION_KEY]
-        shape = float(dist_config[SHAPE_KEY])
         scale = float(dist_config[SCALE_KEY])
-        return GammaDistribution(shape, scale)
+        return ExponentialDistribution(scale)
 
     @property
     def process_time_distribution(self) -> Distribution:
         dist_config = self._get_config()[PROCESS_TIME_DISTRIBUTION]
         scale = float(dist_config[SCALE_KEY])
-        return ExponentialDistribution(scale)
+        shape = float(dist_config[SHAPE_KEY])
+        return GammaDistribution(shape, scale)
 
     @property
     def servers_number(self) -> int:
