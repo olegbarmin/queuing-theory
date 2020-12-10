@@ -21,29 +21,6 @@ class Distribution:
         raise Exception("Method calc is not implemented for {} distribution".format(self.__class__.__name__))
 
 
-class ErlangDistribution(Distribution):
-
-    def __init__(self, shape, scale) -> None:
-        super().__init__()
-        if not isinstance(shape, int):
-            raise Exception("Shape should be an integer for the Erlang Distribution")
-        self._shape = shape  # alpha/m order of Distribution
-        self._scale = float(scale)  # beta
-
-        m = self._shape
-        b = self._scale
-
-        self._coefficient = (-b / m)  # is used each time to generate random number
-
-    def next_random(self) -> float:
-        prod = self._production()
-        return self._coefficient * math.log(prod)
-
-    def _production(self):
-        m = self._shape
-        return production(lambda x: random.random(), m)
-
-
 class GammaDistribution(Distribution):
 
     def __init__(self, shape, scale) -> None:

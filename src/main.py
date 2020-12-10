@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from src.configuration import ConfigReader
-from src.job.jobs import JobGenerator, AtomicInteger
+from src.job.jobs import JobGenerator, AtomicInteger, type_generation
 from src.job.manager import ServerLoadManager
 from src.job.queue import JobStorage
 from src.job.server import JobProcessingServer
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     time_dist = config.process_time_distribution
 
     id_gen = AtomicInteger()
-    job_generator = JobGenerator(lambda: id_gen.increment())
+    job_generator = JobGenerator(id_gen.increment, type_generation)
 
     eventbus = EventBus()
     servers = [JobProcessingServer(time_dist, i + 1, eventbus) for i in range(config.servers_number)]
