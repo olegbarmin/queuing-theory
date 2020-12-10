@@ -5,6 +5,7 @@ from src.configuration import ConfigReader
 from src.job.jobs import JobGenerator, AtomicInteger, type_generation
 from src.job.manager import ServerLoadManager
 from src.job.queue import JobStorage
+from src.job.server import ServerTypes
 from src.model import QueuingSystem
 from src.stats.eventbus import EventBus
 from src.stats.stats import SimulationStatistics
@@ -19,7 +20,7 @@ if __name__ == '__main__':
     job_generator = JobGenerator(id_gen.increment, type_generation)
 
     eventbus = EventBus()
-    servers = config.gateways(eventbus)
+    servers = config.servers(ServerTypes.GATEWAY, eventbus)
     queue = JobStorage(config.queue_size)
     manager = ServerLoadManager(servers, queue, eventbus)
     stats = SimulationStatistics(queue, servers)

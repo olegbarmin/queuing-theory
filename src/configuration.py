@@ -33,14 +33,15 @@ class ConfigReader:
         scale = float(dist_config[SCALE_KEY])
         return ExponentialDistribution(scale)
 
-    def gateways(self, event_bus: EventBus) -> List[Server]:
-        dist_config = self._get_config()[SERVERS_KEY][GATEWAY_KEY]
+    def servers(self, _type: ServerTypes, event_bus: EventBus) -> List[Server]:
+        dist_config = self._get_config()[SERVERS_KEY][_type.value]
+
         scale = float(dist_config[SCALE_KEY])
         shape = float(dist_config[SHAPE_KEY])
         quantity = int(dist_config[QUANTITY_KEY])
         distribution = GammaDistribution(shape, scale)
 
-        return [Server(ServerTypes.GATEWAY, distribution, i + 1, event_bus) for i in range(quantity)]
+        return [Server(_type, distribution, i + 1, event_bus) for i in range(quantity)]
 
     @property
     def queue_size(self) -> int:
