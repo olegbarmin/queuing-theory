@@ -1,11 +1,9 @@
-from typing import List
+from typing import Dict
 
 import yaml
 
 from src.distribution import Distribution, ExponentialDistribution, GammaDistribution
-from src.job.jobs import AtomicInteger
-from src.job.server import Server, ServerType
-from src.stats.eventbus import EventBus
+from src.job.server import ServerType
 
 CONFIG_ROOT_KEY = "QueuingModel"
 INPUT_DISTRIBUTION_KEY = "InputDistribution"
@@ -34,7 +32,7 @@ class ConfigReader:
         scale = float(dist_config[SCALE_KEY])
         return ExponentialDistribution(scale)
 
-    def servers(self, _type: ServerType, id_generator: AtomicInteger, event_bus: EventBus) -> List[Server]:
+    def server_config(self, _type: ServerType) -> Dict:
         dist_config = self._get_config()[SERVERS_KEY][_type.value]
 
         scale = float(dist_config[SCALE_KEY])
@@ -42,7 +40,13 @@ class ConfigReader:
         quantity = int(dist_config[QUANTITY_KEY])
         distribution = GammaDistribution(shape, scale)
 
-        return [Server(_type, distribution, id_generator.increment(), event_bus) for i in range(quantity)]
+        return {
+            "server_type": _type,
+            "scale": scale,
+            "shape": shape,
+            "quantity": quantity,
+            "distribution": distribution
+        }
 
     @property
     def queue_size(self) -> int:

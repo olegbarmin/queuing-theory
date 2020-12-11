@@ -20,6 +20,10 @@ class Job:
     def id(self):
         return self._id
 
+    @property
+    def type(self):
+        return self._type
+
     def __str__(self) -> str:
         return f"Job(id: {self._id}, type: {self._type.name})"
 
