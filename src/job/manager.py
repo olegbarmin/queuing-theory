@@ -11,11 +11,11 @@ from src.thread import Runnable
 
 class ServerLoadManager(Runnable):
 
-    def __init__(self, servers: List[Server], queue: JobStorage, eventbus: EventBus) -> None:
+    def __init__(self, servers: List[Server], queue_size: int, eventbus: EventBus) -> None:
         super().__init__()
         self._servers_dict = {server.id: server for server in servers}
         self._type = servers[0].type
-        self._queue = queue
+        self._queue = JobStorage(queue_size)
         self._lock = threading.Lock()
         self._stop = False
         self._eventbus = eventbus

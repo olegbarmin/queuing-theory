@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 import yaml
 
@@ -33,11 +33,12 @@ class ConfigReader:
         return ExponentialDistribution(scale)
 
     def server_config(self, _type: ServerType) -> Dict:
-        dist_config = self._get_config()[SERVERS_KEY][_type.value]
+        server_config = self._get_config()[SERVERS_KEY][_type.value]
 
-        scale = float(dist_config[SCALE_KEY])
-        shape = float(dist_config[SHAPE_KEY])
-        quantity = int(dist_config[QUANTITY_KEY])
+        scale = float(server_config[SCALE_KEY])
+        shape = float(server_config[SHAPE_KEY])
+        quantity = int(server_config[QUANTITY_KEY])
+        queueSize = int(server_config[QUEUE_SIZE_KEY])
         distribution = GammaDistribution(shape, scale)
 
         return {
@@ -45,8 +46,14 @@ class ConfigReader:
             "scale": scale,
             "shape": shape,
             "quantity": quantity,
+            "queueSize": queueSize,
             "distribution": distribution
         }
+
+    @property
+    def server_types(self) -> List[ServerType]:
+        server_types = self._get_config()[SERVERS_KEY]
+        return [ServerType[t.upper()] for t, _ in list(server_types.items())]
 
     @property
     def queue_size(self) -> int:

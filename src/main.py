@@ -1,31 +1,23 @@
 import os
 from pathlib import Path
-from typing import List, Dict
 
 from src.configuration import ConfigReader
 from src.job.jobs import JobGenerator, AtomicInteger, type_generation
 from src.job.manager import ServerLoadManager
-from src.job.queue import JobStorage
 from src.job.server import ServerType, Server, GatewayServer
 from src.model import QueuingSystem
 from src.stats.eventbus import EventBus
-from src.stats.stats import SimulationStatistics
 
 
-def server_of(id_gen: AtomicInteger, server_type: ServerType, eventbus: EventBus, config: ConfigReader,
-              managers: Dict[ServerType, ServerLoadManager] = None) -> List[Server]:
+def manager_of(id_gen: AtomicInteger, server_type: ServerType, eventbus: EventBus, config: ConfigReader,
+               server_build_func=lambda t, d, _id, eb: Server(t, d, _id, eb)) -> ServerLoadManager:
     if server_type == ServerType.GATEWAY and managers is None:
         raise Exception(f"Manager must be provided to create {server_type} server")
 
     server_config = config.server_config(server_type)
-    if server_type == ServerType.GATEWAY:
-        result = [GatewayServer(server_type, server_config["distribution"], id_gen.increment(), eventbus, managers)
-                  for i in range(server_config["quantity"])]
-    else:
-        result = [Server(server_type, server_config["distribution"], id_gen.increment(), eventbus)
-                  for i in range(server_config["quantity"])]
-
-    return result
+    servers = [server_build_func(server_type, server_config["distribution"], id_gen.increment(), eventbus)
+               for i in range(server_config["quantity"])]
+    return ServerLoadManager(servers, server_config["queueSize"], eventbus)
 
 
 if __name__ == '__main__':
@@ -38,25 +30,23 @@ if __name__ == '__main__':
     job_generator = JobGenerator(id_gen.increment, type_generation)
 
     server_id_gen = AtomicInteger()
-    queue = JobStorage(config.queue_size)
     eventbus = EventBus()
-    servers = {
-        #  ServerType.PAYMENTS: server_of(server_id_gen, ServerType.PAYMENTS, eventbus, config),
-        # ServerType.INVENTORY: server_of(server_id_gen, ServerType.INVENTORY, eventbus, config),
-        # ServerType.SHIPMENT: server_of(server_id_gen, ServerType.SHIPMENT, eventbus, config),
-    }
+    managers = {}
+    for t in config.server_types:
+        if t != ServerType.GATEWAY:
+            managers[t] = manager_of(server_id_gen, t, eventbus, config)
 
-    server_managers = {t: ServerLoadManager(s, queue, eventbus) for t, s in servers.items()}
-    gateways = server_of(server_id_gen, ServerType.GATEWAY, eventbus, config, server_managers)
-    servers[ServerType.GATEWAY] = gateways
-    server_managers[ServerType.GATEWAY] = ServerLoadManager(gateways, queue, eventbus)
+    gateway_manager = manager_of(server_id_gen, ServerType.GATEWAY, eventbus, config,
+                                 lambda t, d, i, eb: GatewayServer(t, d, i, eb, managers))
+    managers[ServerType.GATEWAY] = gateway_manager
 
-    stats = SimulationStatistics(queue, servers)
-    eventbus.add(stats)
+    # todo add separate queue for each server type
+    # stats = SimulationStatistics(queue, servers)
+    # eventbus.add(stats)
 
-    system = QueuingSystem(input_dist, job_generator, config.simulation_duration, server_managers, eventbus)
+    system = QueuingSystem(input_dist, job_generator, config.simulation_duration, managers, eventbus)
     system.run()
 
-    table = stats.get_general_stats()
-    print("------- General Stats -------")
-    print(table)
+    # table = stats.get_general_stats()
+    # print("------- General Stats -------")
+    # print(table)

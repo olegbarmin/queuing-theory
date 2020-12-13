@@ -6,9 +6,14 @@ QueuingModel:
     Gateway: # Gamma Distribution for request processing time
       shape: 2 # Distribution shape
       scale: 1000 # Distribution rate - average job processing time (millis)
-      quantity: 2
+      quantity: 10
+      queueSize: 30
+    Payments:
+      shape: 2 # Distribution shape
+      scale: 2000 # Distribution rate - average job processing time (millis)
+      quantity: 1
+      queueSize: 15
 
-  queueSize: 5
 
   simulationDuration: 10000 # Duration of simulation (millis)
 
