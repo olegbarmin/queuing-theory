@@ -45,7 +45,7 @@ class AtomicInteger:
 
 def type_generation() -> JobType:
     types_ = [JobType.SHOW_PRODUCTS, JobType.CHECKOUT, JobType.PAYMENT]
-    return np.random.choice(types_, 1, p=[0.85, 0.1, 0.05])[0]
+    return np.random.choice(types_, 1, p=[0.70, 0.1, 0.2])[0]
 
 
 class JobGenerator:

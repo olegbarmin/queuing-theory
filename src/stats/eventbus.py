@@ -30,6 +30,9 @@ class Listener:
     def job_was_passed(self):
         pass
 
+    def job_in(self):
+        pass
+
 
 class EventBus:
     def __init__(self) -> None:
@@ -98,3 +101,8 @@ class EventBus:
         with self._lock:
             for listener in self._listeners:
                 listener.job_was_passed()
+
+    def job_in(self):
+        with self._lock:
+            for listener in self._listeners:
+                listener.job_in()

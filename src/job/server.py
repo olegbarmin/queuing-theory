@@ -5,7 +5,7 @@ from typing import Dict, Any
 from src.distribution import Distribution
 from src.job.jobs import Job, JobType
 from src.stats.eventbus import EventBus
-from src.systemtime import sleep
+from src.systemtime import sleep, Stopwatch
 
 
 class ServerType(Enum):
@@ -25,6 +25,7 @@ class Server:
         self._id = id_
         self._lock = threading.Lock()
         self._eventbus = eventbus
+        self._stopped = True
 
     @property
     def id(self):
@@ -41,6 +42,10 @@ class Server:
     def job(self):
         return self._job
 
+    @property
+    def stopped(self):
+        return self._stopped
+
     @job.setter
     def job(self, value: Job):
         with self._lock:
@@ -53,12 +58,14 @@ class Server:
 
     def run(self):
         self._log("Server was started...")
+        self._stopped = False
         while self._stop is not True:
             job = self._job
             if job is not None:
                 self._process(job)
                 self._job = None
             sleep(1)
+        self._stopped = True
         self._log("Server was stopped!")
 
     def stop(self):
@@ -67,8 +74,11 @@ class Server:
     def _process(self, job: Job):
         duration = int(self._distribution.next_random())
         self._log(f"Processing {job}... (ETA: {duration})")
+        stopwatch = Stopwatch()
         sleep(duration)
+
         self._eventbus.job_was_processed(self.type, job)
+        self._log(f"{job} was processed for {stopwatch.elapsed()} ms")
 
     def _log(self, msg):
         print(f"Server {self._type.name} #{self._id}: {msg}")
@@ -92,8 +102,7 @@ class GatewayServer(Server):
         server_type = JOB_TO_SERVER_TYPE[job.type]
         if server_type not in self._managers:
             self._log(f"{server_type} server was not found to process {job}")
-            # todo: stub must be removed
-            super(GatewayServer, self)._process(job)
+            raise Exception(f"Server for {job} wasn't found")
         else:
             self._log(f"{job} was passed to {server_type} servers")
             manager = self._managers[server_type]

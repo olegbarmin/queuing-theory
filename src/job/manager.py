@@ -5,6 +5,7 @@ from src.job.jobs import Job
 from src.job.queue import JobStorage
 from src.job.server import Server
 from src.stats.eventbus import EventBus
+from src.stats.server_stats import LoadManagerStatistics
 from src.systemtime import sleep
 from src.thread import Runnable
 
@@ -20,6 +21,7 @@ class ServerLoadManager(Runnable):
         self._stop = False
         self._stopped = True
         self._eventbus = eventbus
+        self._stats = LoadManagerStatistics(self._queue, servers)
 
     @property
     def servers(self):
@@ -32,6 +34,10 @@ class ServerLoadManager(Runnable):
     @property
     def stopped(self):
         return self._stopped
+
+    @property
+    def stats(self):
+        return self._stats
 
     def run(self):
         self._stopped = False
@@ -51,8 +57,7 @@ class ServerLoadManager(Runnable):
                 if server.is_idle():
                     job, exist = self._queue.pop()
                     if exist:
-                        self.log("Picking job {} from queue to #{} server (queue size = {})"
-                                 .format(job, server.id, self._queue.size()))
+                        self.log(f"Picking job {job} from queue to #{server.id} server (queue size = {self._queue})")
                         self._eventbus.job_pop_from_queue(self._type, job)
                         server.job = job
 
@@ -69,10 +74,10 @@ class ServerLoadManager(Runnable):
     def _queue_job(self, job: Job) -> bool:
         success = self._queue.add(job)
         if success:
-            self.log(f"{job} was queued {self._queue}")
+            self.log(f"{job} was queued (queue size = {self._queue})")
             self._eventbus.job_queued(self._type, job)
         else:
-            self.log(f"Job {job} was dropped since queue is full {self._queue}")
+            self.log(f"Job {job} was dropped since queue is full (queue size = {self._queue})")
             self._eventbus.job_rejected(self._type, job)
 
         return success
@@ -89,4 +94,4 @@ class ServerLoadManager(Runnable):
         return found_server
 
     def log(self, msg):
-        print(f"Manager ({self._type.name}): {msg}")
+        print(f"Manager {self._type.name}: {msg}")

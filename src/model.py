@@ -44,7 +44,8 @@ class QueuingSystem:
 
             job = self._job_generator.next()
             self._eventbus.job_arrived(job)
-            self._managers[ServerType.GATEWAY].schedule(job)
+            if self._managers[ServerType.GATEWAY].schedule(job):
+                self._eventbus.job_in()
 
         self._stop()
         self._eventbus.all_jobs_arrived()
@@ -58,11 +59,12 @@ class QueuingSystem:
             m.stop()
         QueuingSystem._wait_for_thread_stop(self._manager_threads)
         self._wait_for_managers_stop()
-        self._log(f"All managers were stopped")
         for m in self._managers.values():
             for s in m.servers:
                 s.stop()
         QueuingSystem._wait_for_thread_stop(self._servers_threads)
+        self._wait_for_servers_stop()
+        self._log(f"All managers and servers were stopped")
 
     @staticmethod
     def _wait_for_thread_stop(threads: List[threading.Thread]):
@@ -73,6 +75,16 @@ class QueuingSystem:
 
     def _wait_for_managers_stop(self):
         while not all([m.stopped for m in self._managers.values()]):
+            sleep(1)
+
+    def _wait_for_servers_stop(self):
+        servers = []
+        for m in self._managers.values():
+            m_servers = m.servers
+            for s in m_servers:
+                servers.append(s)
+
+        while not all([s.stopped for s in servers]):
             sleep(1)
 
     def _log(self, msg):

@@ -14,21 +14,6 @@ class JobProcessTimeMetric:
         return self._process_time
 
 
-class LoadMetric:
-    def __init__(self) -> None:
-        self._jobs_number = []
-
-    def add(self, queue_size: int):
-        self._jobs_number.append(queue_size)
-
-    @property
-    def load_values(self):
-        return self._jobs_number
-
-    def average_load(self) -> int:
-        return sum(self._jobs_number) / len(self._jobs_number) if len(self._jobs_number) is not 0 else 0
-
-
 class QueueSizeMetric:
 
     def __init__(self) -> None:
@@ -60,15 +45,27 @@ IDLE = "IDLE"
 BUSY = "BUSY"
 
 
-class SystemBusynessMetric:
+class LoadMetric:
 
     def __init__(self) -> None:
+        self._jobs_number = 0
         self._state_changes = []
         self._stopwatch = Stopwatch()
         print("SimulationStatistics: start state stopwatch")
         self._current_state = IDLE
 
-    def record_idle(self):
+    def job_in(self):
+        self._jobs_number += 1
+        self._record_busy()
+
+    def job_out(self):
+        self._jobs_number -= 1
+        if self._jobs_number < 0:
+            raise Exception("Number of processed out jobs exceeded number arrived jobs")
+        if self._jobs_number == 0:
+            self._record_idle()
+
+    def _record_idle(self):
         if self._current_state is BUSY:
             elapsed = self._stopwatch.elapsed()
             self._state_changes.append((self._current_state, elapsed))
@@ -76,7 +73,7 @@ class SystemBusynessMetric:
             self._stopwatch = Stopwatch()
             print("SimulationStatistics: System is IDLE (BUSY for {} ms)".format(elapsed))
 
-    def record_busy(self):
+    def _record_busy(self):
         if self._current_state is IDLE:
             elapsed = self._stopwatch.elapsed()
             self._state_changes.append((self._current_state, elapsed))
@@ -91,6 +88,8 @@ class SystemBusynessMetric:
         self._state_changes.append((state, elapsed))
         self._current_state = None
         self._stopwatch = None
+        if self._jobs_number != 0:
+            raise Exception(f"Jobs number in the system after simulation: {self._jobs_number}")
 
     def idle_time(self):
         idle_states = filter(lambda state_change: state_change[0] is IDLE, self._state_changes)
@@ -99,6 +98,20 @@ class SystemBusynessMetric:
     def busy_time(self):
         busy_states = filter(lambda state_change: state_change[0] is BUSY, self._state_changes)
         return sum(map(lambda x: x[1], busy_states))
+
+    def total_time(self):
+        busy_time = self.busy_time()
+        idle_time = self.idle_time()
+        return busy_time + idle_time
+
+    def idle_probability(self) -> float:
+        busy_time = self.busy_time()
+        idle_time = self.idle_time()
+        total_time = busy_time + idle_time
+        return round((idle_time / total_time) * 100, 2)
+
+    def is_busy(self):
+        return self._current_state == BUSY
 
 
 class JobDropMetric:

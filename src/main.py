@@ -7,7 +7,7 @@ from src.job.manager import ServerLoadManager
 from src.job.server import ServerType, Server, GatewayServer
 from src.model import QueuingSystem
 from src.stats.eventbus import EventBus
-from src.stats.stats import SimulationStatistics
+from src.stats.system_stats import SimulationStatistics
 
 
 def manager_of(id_gen: AtomicInteger, server_type: ServerType, eventbus: EventBus, config: ConfigReader,
@@ -47,7 +47,4 @@ if __name__ == '__main__':
 
     system = QueuingSystem(input_dist, job_generator, config.simulation_duration, managers, eventbus)
     system.run()
-
-    table = stats.get_general_stats()
-    print("------- Gateway Stats -------")
-    print(table)
+    stats.print_stats()
