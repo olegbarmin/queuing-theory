@@ -22,6 +22,7 @@ class SimulationStatistics(Listener):
     def job_arrived(self, job):
         for stats in self._stats.values():
             stats.job_arrived(job)
+        self._job_drop_metric.record_job_arrival()
 
     def job_schedule(self, type, job):
         self._stats_for(type).job_schedule(type, job)
@@ -36,7 +37,11 @@ class SimulationStatistics(Listener):
         for stats in self._stats.values():
             stats.job_rejected(type, job)
         self._load_metric.job_out()
+        print(f"SimulationStatistics: {job} rejected")
         self._job_drop_metric.record_job_drop()
+
+    def job_was_passed(self, job):
+        self._stats_for(ServerType.GATEWAY).job_was_passed(job)
 
     def job_was_processed(self, type, job):
         self._load_metric.job_out()
@@ -58,18 +63,14 @@ class SimulationStatistics(Listener):
 
     def print_stats(self):
         print(f"-------------------- System Statistics --------------------")
-        # avg_load = self._load_metric.average_load()
+        avg_load = self._load_metric.average_load()
         idle_probability = self._load_metric.idle_probability()
-        # reject_probability = self._job_drop_metric.job_drop_chance()
+        reject_probability = self._job_drop_metric.job_drop_chance()
         #
         table = tabulate([
-            #     ["Average jobs number in the system", avg_load, "jobs"],  # todo: extract to system stats
-            #     # To calculate idleness of the system in the System stats we can count arrived and processed/rejected
-            #     # jobs. When the number of arrived == processed + rejected, means that the system is idle.
-            ["Chance of system being idle", idle_probability, "%"],  # todo: extract to system stats.
-            #     # Since we can get the number of total jobs processed (during calculation of idleness), the chance of
-            #     # reject can be calculated: rejected_jobs_number / total_jobs_arrived_number
-            #     ["Chance of reject", reject_probability, "%"]  # todo: extract to system stats.
+            ["Average jobs number in the system", avg_load, "jobs"],
+            ["Chance of system being idle", idle_probability, "%"],
+            ["Chance of reject", reject_probability, "%"]
         ])
         print(table)
 

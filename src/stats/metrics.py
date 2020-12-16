@@ -50,6 +50,8 @@ class LoadMetric:
     def __init__(self) -> None:
         self._jobs_number = 0
         self._state_changes = []
+        self._jobs_number_list = []
+
         self._stopwatch = Stopwatch()
         print("SimulationStatistics: start state stopwatch")
         self._current_state = IDLE
@@ -57,11 +59,13 @@ class LoadMetric:
     def job_in(self):
         self._jobs_number += 1
         self._record_busy()
+        self._jobs_number_list.append(self._jobs_number)
 
     def job_out(self):
         self._jobs_number -= 1
         if self._jobs_number < 0:
-            raise Exception("Number of processed out jobs exceeded number arrived jobs")
+            # raise Exception("Number of processed out jobs exceeded number arrived jobs")
+            self._jobs_number = 0
         if self._jobs_number == 0:
             self._record_idle()
 
@@ -88,8 +92,8 @@ class LoadMetric:
         self._state_changes.append((state, elapsed))
         self._current_state = None
         self._stopwatch = None
-        if self._jobs_number != 0:
-            raise Exception(f"Jobs number in the system after simulation: {self._jobs_number}")
+        # if self._jobs_number != 0:
+        #     raise Exception(f"Jobs number in the system after simulation: {self._jobs_number}")
 
     def idle_time(self):
         idle_states = filter(lambda state_change: state_change[0] is IDLE, self._state_changes)
@@ -110,8 +114,8 @@ class LoadMetric:
         total_time = busy_time + idle_time
         return round((idle_time / total_time) * 100, 2)
 
-    def is_busy(self):
-        return self._current_state == BUSY
+    def average_load(self) -> int:
+        return sum(self._jobs_number_list) / len(self._jobs_number_list) if len(self._jobs_number_list) is not 0 else 0
 
 
 class JobDropMetric:

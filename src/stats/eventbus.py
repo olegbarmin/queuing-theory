@@ -27,7 +27,7 @@ class Listener:
     def all_jobs_arrived(self):
         pass
 
-    def job_was_passed(self):
+    def job_was_passed(self, job):
         pass
 
     def job_in(self):
@@ -100,7 +100,7 @@ class EventBus:
     def job_was_passed(self, _type, job):
         with self._lock:
             for listener in self._listeners:
-                listener.job_was_passed()
+                listener.job_was_passed(job)
 
     def job_in(self):
         with self._lock:

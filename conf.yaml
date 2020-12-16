@@ -1,30 +1,30 @@
 QueuingModel:
   InputDistribution: # Exponential Distribution
-    scale: 5000 # average interval between jobs arrival (millis)
+    scale: 100 # average interval between jobs arrival (millis)
 
   Servers:
     Gateway: # Gamma Distribution for request processing time
-      shape: 2 # Distribution shape
+      shape: 1 # Distribution shape
       scale: 100 # Distribution scale
-      quantity: 1
+      quantity: 3
       queueSize: 10
     Payments:
       shape: 2 # Distribution shape
       scale: 2000 # Distribution scale
-      quantity: 1
-      queueSize: 3
+      quantity: 3
+      queueSize: 10
     Inventory:
-      shape: 2 # Distribution shape
-      scale: 200 # Distribution scale
-      quantity: 1
+      shape: 1 # Distribution shape
+      scale: 100 # Distribution scale
+      quantity: 3
       queueSize: 3
     Shipment:
       shape: 2 # Distribution shape
-      scale: 300 # Distribution scale
+      scale: 500 # Distribution scale
       quantity: 1
       queueSize: 3
 
-  simulationDuration: 10000 # Duration of simulation (millis)
+  simulationDuration: 60000 # Duration of simulation (millis)
 
 
 

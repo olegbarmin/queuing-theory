@@ -7,6 +7,7 @@ from src.job.manager import ServerLoadManager
 from src.job.server import ServerType, Server, GatewayServer
 from src.model import QueuingSystem
 from src.stats.eventbus import EventBus
+from src.stats.server_stats import GatewayStatistics
 from src.stats.system_stats import SimulationStatistics
 
 
@@ -39,6 +40,7 @@ if __name__ == '__main__':
 
     gateway_manager = manager_of(server_id_gen, ServerType.GATEWAY, eventbus, config,
                                  lambda t, d, i, eb: GatewayServer(t, d, i, eb, managers))
+    gateway_manager.stats = GatewayStatistics(gateway_manager.queue, gateway_manager.servers)
     managers[ServerType.GATEWAY] = gateway_manager
 
     # todo fix stats

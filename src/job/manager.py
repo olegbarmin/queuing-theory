@@ -39,6 +39,10 @@ class ServerLoadManager(Runnable):
     def stats(self):
         return self._stats
 
+    @stats.setter
+    def stats(self, value):
+        self._stats = value
+
     def run(self):
         self._stopped = False
         # runs until stop command received and queue is cleared

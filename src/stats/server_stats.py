@@ -88,3 +88,15 @@ class LoadManagerStatistics(Listener):
 
     def _queue_size(self):
         return self._queue_size_metric.average_queue_size()
+
+
+class GatewayStatistics(LoadManagerStatistics):
+
+    def __init__(self, queue: JobStorage, servers: List[Server]) -> None:
+        super().__init__(queue, servers)
+
+    def job_was_processed(self, type, job):
+        pass
+
+    def job_was_passed(self, job):
+        self._record_job_finish(job)

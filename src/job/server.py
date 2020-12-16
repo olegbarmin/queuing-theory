@@ -107,4 +107,6 @@ class GatewayServer(Server):
             self._log(f"{job} was passed to {server_type} servers")
             manager = self._managers[server_type]
             manager.schedule(job)
+            random = int(self._distribution.next_random())
+            sleep(random)
             self._eventbus.job_was_passed(self.type, job)
