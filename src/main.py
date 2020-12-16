@@ -43,7 +43,6 @@ if __name__ == '__main__':
     gateway_manager.stats = GatewayStatistics(gateway_manager.queue, gateway_manager.servers)
     managers[ServerType.GATEWAY] = gateway_manager
 
-    # todo fix stats
     stats = SimulationStatistics(managers)
     eventbus.add(stats)
 
