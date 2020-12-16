@@ -39,3 +39,6 @@ class JobStorage:
 
     def size(self):
         return len(self._queue)
+
+    def __str__(self) -> str:
+        return f"[{len(self._queue)}/{self._queue.maxlen}]"

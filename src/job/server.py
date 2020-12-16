@@ -46,7 +46,9 @@ class Server:
         with self._lock:
             if self._job is not None:
                 raise Exception(f"Cannot start processing of {value} since is {self._job} is under processing")
-            self._eventbus.job_process_start(value)
+            if self._stop:
+                raise Exception(f"Server {self._type} #{self._id} was stooped, job cannot be assigned")
+            self._eventbus.job_process_start(self.type, value)
             self._job = value
 
     def run(self):
@@ -66,7 +68,7 @@ class Server:
         duration = int(self._distribution.next_random())
         self._log(f"Processing {job}... (ETA: {duration})")
         sleep(duration)
-        self._eventbus.job_was_processed(job)
+        self._eventbus.job_was_processed(self.type, job)
 
     def _log(self, msg):
         print(f"Server {self._type.name} #{self._id}: {msg}")
@@ -93,6 +95,7 @@ class GatewayServer(Server):
             # todo: stub must be removed
             super(GatewayServer, self)._process(job)
         else:
-            self._log(f"{job} was sent to {server_type} servers")
+            self._log(f"{job} was passed to {server_type} servers")
             manager = self._managers[server_type]
             manager.schedule(job)
+            self._eventbus.job_was_passed(self.type, job)

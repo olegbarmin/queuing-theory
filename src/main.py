@@ -7,6 +7,7 @@ from src.job.manager import ServerLoadManager
 from src.job.server import ServerType, Server, GatewayServer
 from src.model import QueuingSystem
 from src.stats.eventbus import EventBus
+from src.stats.stats import SimulationStatistics
 
 
 def manager_of(id_gen: AtomicInteger, server_type: ServerType, eventbus: EventBus, config: ConfigReader,
@@ -40,13 +41,13 @@ if __name__ == '__main__':
                                  lambda t, d, i, eb: GatewayServer(t, d, i, eb, managers))
     managers[ServerType.GATEWAY] = gateway_manager
 
-    # todo add separate queue for each server type
-    # stats = SimulationStatistics(queue, servers)
-    # eventbus.add(stats)
+    # todo fix stats
+    stats = SimulationStatistics(managers)
+    eventbus.add(stats)
 
     system = QueuingSystem(input_dist, job_generator, config.simulation_duration, managers, eventbus)
     system.run()
 
-    # table = stats.get_general_stats()
-    # print("------- General Stats -------")
-    # print(table)
+    table = stats.get_general_stats()
+    print("------- Gateway Stats -------")
+    print(table)

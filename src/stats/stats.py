@@ -3,6 +3,7 @@ from typing import List, Dict
 from tabulate import tabulate
 
 from src.job.jobs import Job
+from src.job.manager import ServerLoadManager
 from src.job.queue import JobStorage
 from src.job.server import Server, ServerType
 from src.stats.eventbus import Listener
@@ -11,9 +12,9 @@ from src.stats.metrics import QueueSizeMetric, LoadMetric, JobProcessTimeMetric,
 from src.systemtime import Stopwatch
 
 
-class SimulationStatistics(Listener):
+class LoadManagerStatistics(Listener):
 
-    def __init__(self, queue: JobStorage, servers: Dict[ServerType, List[Server]]) -> None:
+    def __init__(self, queue: JobStorage, servers: List[Server]) -> None:
         self._job_processing_metrics = []
         self._load_metric = LoadMetric()
         self._queue_size_metric = QueueSizeMetric()
@@ -22,8 +23,7 @@ class SimulationStatistics(Listener):
         self._job_drop_metric = JobDropMetric()
 
         self._queue = queue
-        flatten = lambda t: [item for sublist in t for item in sublist]
-        self._servers = flatten(list(servers.values()))
+        self._servers = servers
 
         self._processing_time_dict = {}  # id to stopwatch
         self._queue_time_dict = {}  # id to stopwatch
@@ -31,18 +31,18 @@ class SimulationStatistics(Listener):
     def job_arrived(self, job):
         self._job_drop_metric.record_job_arrival()
 
-    def job_schedule(self, job: Job):
+    def job_schedule(self, type, job: Job):
         print("SimulationStatistics: {} scheduled".format(job))
         self._record_queue_size()
         self._record_load()
 
         self._record_system_busy()
 
-    def job_process_start(self, job):
+    def job_process_start(self, type, job: Job):
         self._processing_time_dict[job.id] = Stopwatch()
         print("SimulationStatistics: {} processing started".format(job))
 
-    def job_was_processed(self, job):
+    def job_was_processed(self, type, job):
         self._record_queue_size()
         self._record_load()
 
@@ -50,14 +50,14 @@ class SimulationStatistics(Listener):
         if self._is_system_idle():
             self._record_system_idle()
 
-    def all_jobs_processed(self):
+    def all_jobs_arrived(self):
         self._busyness_metric.stop_record()
 
-    def job_queued(self, job):
+    def job_queued(self, type, job: Job):
         print("SimulationStatistics: {} queued".format(job))
         self._queue_time_dict[job.id] = Stopwatch()
 
-    def job_pop_from_queue(self, job):
+    def job_pop_from_queue(self, type, job: Job):
         print("SimulationStatistics: {} left queue".format(job))
         if job.id not in self._queue_time_dict:
             raise Exception("{} should be inside queue time dict, but it is not".format(job))
@@ -66,7 +66,7 @@ class SimulationStatistics(Listener):
         self._wait_time_metrics.append(WaitTimeMetric(job, elapsed))
         del self._queue_time_dict[job.id]
 
-    def job_rejected(self, job):
+    def job_rejected(self, type, job: Job):
         print(f"SimulationStatistics: {job} rejected")
         self._job_drop_metric.record_job_drop()
 
@@ -81,8 +81,8 @@ class SimulationStatistics(Listener):
             ["Average job processing time", avg_process_time, "ms"],
             ["Average time in queue", avg_queue_time, "ms"],
             ["Average queue size", avg_queue_size, "jobs in queue"],
-            ["Average jobs number in the system", avg_load, "jobs"],
-            ["Chance of system being idle", idle_probability, "%"],
+            ["Average jobs number in the system", avg_load, "jobs"],  # todo: extract to system stats
+            ["Chance of system being idle", idle_probability, "%"],  # todo: extract to system stats
             ["Chance of reject", reject_probability, "%"]
         ]
         return tabulate(table, numalign="right")
@@ -155,3 +155,46 @@ class SimulationStatistics(Listener):
 
     def _reject_probability(self):
         return self._job_drop_metric.job_drop_chance()
+
+
+class SimulationStatistics(Listener):
+
+    def __init__(self, managers: Dict[ServerType, ServerLoadManager]) -> None:
+        super().__init__()
+        self._stats = {}
+        self._managers = managers
+
+    def job_arrived(self, job):
+        for stats in self._stats.values():
+            stats.job_arrived(job)
+
+    def job_schedule(self, type, job):
+        self._stats_for(type).job_schedule(type, job)
+
+    def job_queued(self, type, job):
+        self._stats_for(type).job_queued(type, job)
+
+    def job_pop_from_queue(self, type, job):
+        self._stats_for(type).job_pop_from_queue(type, job)
+
+    def job_rejected(self, type, job):
+        self._stats_for(type).job_rejected(type, job)
+
+    def job_was_processed(self, type, job):
+        self._stats_for(type).job_was_processed(type, job)
+
+    def job_process_start(self, type, job):
+        self._stats_for(type).job_process_start(type, job)
+
+    def all_jobs_arrived(self):
+        for stats in self._stats.values():
+            stats.all_jobs_arrived()
+
+    def _stats_for(self, type: ServerType) -> LoadManagerStatistics:
+        if type not in self._stats:
+            manager = self._managers[type]
+            self._stats[type] = LoadManagerStatistics(manager.queue, manager.servers)
+        return self._stats[type]
+
+    def get_general_stats(self):
+        return self._stats_for(ServerType.GATEWAY).get_general_stats()
